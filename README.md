@@ -30,9 +30,9 @@ cd geotag_camera
 flutter pub get
 ```
 
-3. Run the app:
+3. Run the app with a Mapbox public access token:
 ```bash
-flutter run
+flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.your_actual_token_here
 ```
 
 ## Permissions

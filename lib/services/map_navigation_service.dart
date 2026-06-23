@@ -17,6 +17,7 @@ enum MapNavigationErrorType {
   noRoute,
   network,
   mapboxConfiguration,
+  mapUnavailable,
   unknown,
 }
 
@@ -25,11 +26,7 @@ class MapNavigationException implements Exception {
   final String message;
   final Object? cause;
 
-  const MapNavigationException(
-    this.type,
-    this.message, {
-    this.cause,
-  });
+  const MapNavigationException(this.type, this.message, {this.cause});
 
   @override
   String toString() => message;
@@ -39,10 +36,7 @@ class NavigationCoordinate {
   final double latitude;
   final double longitude;
 
-  const NavigationCoordinate({
-    required this.latitude,
-    required this.longitude,
-  });
+  const NavigationCoordinate({required this.latitude, required this.longitude});
 
   factory NavigationCoordinate.fromLocationInfo(LocationInfo info) {
     return NavigationCoordinate(
@@ -138,6 +132,9 @@ class MapNavigationService {
     String destinationInput, {
     http.Client? client,
   }) async {
+    _normalizedDestination(destinationInput);
+    _ensureMapboxToken();
+
     final effectiveClient = client ?? http.Client();
 
     try {
@@ -163,25 +160,22 @@ class MapNavigationService {
     String destinationInput, {
     http.Client? client,
   }) async {
-    final query = destinationInput.trim();
-    if (query.isEmpty) {
-      throw const MapNavigationException(
-        MapNavigationErrorType.invalidDestination,
-        'Enter a destination to start navigation.',
-      );
-    }
+    final query = _normalizedDestination(destinationInput);
 
     _ensureMapboxToken();
 
     final effectiveClient = client ?? http.Client();
     final encodedQuery = Uri.encodeComponent(query);
-    final uri = Uri.parse(
-      'https://api.mapbox.com/geocoding/v5/mapbox.places/$encodedQuery.json',
-    ).replace(queryParameters: {
-      'access_token': MapboxConfig.accessToken,
-      'limit': '1',
-      'types': 'address,poi,place,locality,neighborhood,region,country',
-    });
+    final uri =
+        Uri.parse(
+          'https://api.mapbox.com/geocoding/v5/mapbox.places/$encodedQuery.json',
+        ).replace(
+          queryParameters: {
+            'access_token': MapboxConfig.accessToken,
+            'limit': '1',
+            'types': 'address,poi,place,locality,neighborhood,region,country',
+          },
+        );
 
     try {
       final response = await effectiveClient.get(uri).timeout(_requestTimeout);
@@ -270,14 +264,14 @@ class MapNavigationService {
     int statusCode,
     String body,
   ) {
-    final data = _decodeJson(body);
-
     if (statusCode == 401 || statusCode == 403) {
       throw const MapNavigationException(
         MapNavigationErrorType.mapboxConfiguration,
         'Mapbox access token was rejected. Update the token before using navigation.',
       );
     }
+
+    final data = _decodeJson(body);
 
     if (statusCode < 200 || statusCode >= 300) {
       throw MapNavigationException(
@@ -311,8 +305,16 @@ class MapNavigationService {
       );
     }
 
-    final longitude = _readDouble(center[0]);
-    final latitude = _readDouble(center[1]);
+    final longitude = _readDouble(
+      center[0],
+      errorType: MapNavigationErrorType.invalidDestination,
+      message: 'The destination coordinates were invalid.',
+    );
+    final latitude = _readDouble(
+      center[1],
+      errorType: MapNavigationErrorType.invalidDestination,
+      message: 'The destination coordinates were invalid.',
+    );
     final placeName = (feature['place_name'] as String?)?.trim();
     final coordinate = NavigationCoordinate(
       latitude: latitude,
@@ -339,12 +341,21 @@ class MapNavigationService {
     required NavigationCoordinate origin,
     required DestinationSearchResult destination,
   }) {
-    final data = _decodeJson(body);
-
     if (statusCode == 401 || statusCode == 403) {
       throw const MapNavigationException(
         MapNavigationErrorType.mapboxConfiguration,
         'Mapbox access token was rejected. Update the token before using navigation.',
+      );
+    }
+
+    final data = _decodeJson(body);
+
+    final code = data['code'] as String?;
+    if (code == 'NoRoute' || code == 'NoSegment') {
+      throw MapNavigationException(
+        MapNavigationErrorType.noRoute,
+        'No route could be generated for that destination.',
+        cause: data,
       );
     }
 
@@ -356,16 +367,11 @@ class MapNavigationService {
       );
     }
 
-    final code = data['code'] as String?;
     final routes = data['routes'];
     if (code != null && code != 'Ok') {
       throw MapNavigationException(
-        code == 'NoRoute'
-            ? MapNavigationErrorType.noRoute
-            : MapNavigationErrorType.network,
-        code == 'NoRoute'
-            ? 'No route could be generated for that destination.'
-            : 'Route generation failed. Try again in a moment.',
+        MapNavigationErrorType.network,
+        'Route generation failed. Try again in a moment.',
         cause: data,
       );
     }
@@ -385,11 +391,29 @@ class MapNavigationService {
       );
     }
 
-    final distance = _readDouble(route['distance']);
-    final duration = _readDouble(route['duration']);
+    final distance = _readDouble(
+      route['distance'],
+      errorType: MapNavigationErrorType.noRoute,
+      message: 'The route response included invalid distance data.',
+    );
+    final duration = _readDouble(
+      route['duration'],
+      errorType: MapNavigationErrorType.noRoute,
+      message: 'The route response included invalid duration data.',
+    );
+    if (!distance.isFinite ||
+        !duration.isFinite ||
+        distance < 0 ||
+        duration < 0) {
+      throw const MapNavigationException(
+        MapNavigationErrorType.noRoute,
+        'The route response included invalid travel metrics.',
+      );
+    }
     final geometry = route['geometry'];
-    final coordinates =
-        geometry is Map<String, dynamic> ? geometry['coordinates'] : null;
+    final coordinates = geometry is Map<String, dynamic>
+        ? geometry['coordinates']
+        : null;
 
     if (coordinates is! List || coordinates.length < 2) {
       throw const MapNavigationException(
@@ -398,19 +422,29 @@ class MapNavigationService {
       );
     }
 
-    final routePoints = coordinates.map<NavigationCoordinate>((coordinate) {
-      if (coordinate is! List || coordinate.length < 2) {
-        throw const MapNavigationException(
-          MapNavigationErrorType.noRoute,
-          'The route included invalid coordinates.',
-        );
-      }
+    final routePoints = coordinates
+        .map<NavigationCoordinate>((coordinate) {
+          if (coordinate is! List || coordinate.length < 2) {
+            throw const MapNavigationException(
+              MapNavigationErrorType.noRoute,
+              'The route included invalid coordinates.',
+            );
+          }
 
-      return NavigationCoordinate(
-        latitude: _readDouble(coordinate[1]),
-        longitude: _readDouble(coordinate[0]),
-      );
-    }).toList(growable: false);
+          return NavigationCoordinate(
+            latitude: _readDouble(
+              coordinate[1],
+              errorType: MapNavigationErrorType.noRoute,
+              message: 'The route included invalid coordinates.',
+            ),
+            longitude: _readDouble(
+              coordinate[0],
+              errorType: MapNavigationErrorType.noRoute,
+              message: 'The route included invalid coordinates.',
+            ),
+          );
+        })
+        .toList(growable: false);
 
     if (routePoints.any((coordinate) => !coordinate.isValid)) {
       throw const MapNavigationException(
@@ -473,6 +507,17 @@ class MapNavigationService {
     }
   }
 
+  static String _normalizedDestination(String destinationInput) {
+    final destination = destinationInput.trim();
+    if (destination.isEmpty) {
+      throw const MapNavigationException(
+        MapNavigationErrorType.invalidDestination,
+        'Enter a destination to start navigation.',
+      );
+    }
+    return destination;
+  }
+
   static Map<String, dynamic> _decodeJson(String body) {
     try {
       final decoded = json.decode(body);
@@ -489,7 +534,11 @@ class MapNavigationService {
     );
   }
 
-  static double _readDouble(Object? value) {
+  static double _readDouble(
+    Object? value, {
+    required MapNavigationErrorType errorType,
+    required String message,
+  }) {
     if (value is num) {
       return value.toDouble();
     }
@@ -501,9 +550,6 @@ class MapNavigationService {
       }
     }
 
-    throw const MapNavigationException(
-      MapNavigationErrorType.noRoute,
-      'The route response included invalid numeric data.',
-    );
+    throw MapNavigationException(errorType, message);
   }
 }

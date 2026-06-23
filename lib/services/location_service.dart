@@ -40,9 +40,7 @@ class LocationResult {
 
   bool get success => info != null;
 
-  LocationResult.success(this.info)
-      : error = null,
-        errorMessage = null;
+  LocationResult.success(this.info) : error = null, errorMessage = null;
 
   LocationResult.failure(this.error, this.errorMessage) : info = null;
 }
@@ -77,8 +75,9 @@ class LocationService {
     return await Geolocator.isLocationServiceEnabled();
   }
 
-  static Future<LocationResult> getCurrentLocationResult(
-      {bool forceRefresh = false}) async {
+  static Future<LocationResult> getCurrentLocationResult({
+    bool forceRefresh = false,
+  }) async {
     if (_isGettingLocation && !forceRefresh) {
       if (_currentLocation != null) {
         return LocationResult.success(_currentLocation);
@@ -121,7 +120,9 @@ class LocationService {
         debugPrint('Attempting to get last known position...');
         position = await Geolocator.getLastKnownPosition();
         if (position != null) {
-          debugPrint('Found last known position: ${position.latitude}, ${position.longitude}');
+          debugPrint(
+            'Found last known position: ${position.latitude}, ${position.longitude}',
+          );
         }
       } catch (e) {
         debugPrint('Error getting last known position: $e');
@@ -135,7 +136,9 @@ class LocationService {
           timeLimit: const Duration(seconds: 20),
         );
         position = fresh;
-        debugPrint('Fresh position obtained: ${position.latitude}, ${position.longitude}');
+        debugPrint(
+          'Fresh position obtained: ${position.latitude}, ${position.longitude}',
+        );
       } catch (e) {
         debugPrint('Fresh position failed: $e');
         if (position == null) {
@@ -151,14 +154,16 @@ class LocationService {
       // 4. Geocode via Mapbox
       String? address;
       try {
-        address = await _getMapboxAddress(position!.latitude, position.longitude)
-            .timeout(const Duration(seconds: 8), onTimeout: () => null);
+        address = await _getMapboxAddress(
+          position.latitude,
+          position.longitude,
+        ).timeout(const Duration(seconds: 8), onTimeout: () => null);
       } catch (e) {
         debugPrint('Geocoding failed: $e');
       }
 
       _currentLocation = LocationInfo(
-        latitude: position!.latitude,
+        latitude: position.latitude,
         longitude: position.longitude,
         address: address,
         timestamp: DateTime.now(),
@@ -167,7 +172,10 @@ class LocationService {
       return LocationResult.success(_currentLocation);
     } catch (e) {
       debugPrint('LocationService error: $e');
-      return LocationResult.failure(LocationError.unknown, 'Unexpected error: $e');
+      return LocationResult.failure(
+        LocationError.unknown,
+        'Unexpected error: $e',
+      );
     } finally {
       _isGettingLocation = false;
     }
@@ -183,7 +191,9 @@ class LocationService {
   }
 
   static Future<String?> _getMapboxAddress(
-      double latitude, double longitude) async {
+    double latitude,
+    double longitude,
+  ) async {
     try {
       // Expanded types to include neighborhood, locality, and region for better coverage
       final url =
@@ -192,18 +202,20 @@ class LocationService {
 
       debugPrint('Fetching address from Mapbox: $url');
       final response = await http.get(Uri.parse(url));
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final features = data['features'] as List;
-        
+
         if (features.isNotEmpty) {
           final placeName = features.first['place_name'] as String?;
           if (placeName != null && placeName.trim().isNotEmpty) {
             debugPrint('Mapbox geocoding success: $placeName');
             return placeName.trim();
           } else {
-            debugPrint('Mapbox geocoding: Found feature but place_name was empty.');
+            debugPrint(
+              'Mapbox geocoding: Found feature but place_name was empty.',
+            );
           }
         } else {
           debugPrint('Mapbox geocoding: No features found in response.');

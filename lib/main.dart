@@ -15,8 +15,9 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Initialize Mapbox SDK with access token
-  MapboxOptions.setAccessToken(MapboxConfig.accessToken);
+  if (MapboxConfig.hasValidAccessToken) {
+    MapboxOptions.setAccessToken(MapboxConfig.accessToken);
+  }
 
   runApp(const GeoTagCameraApp());
 }
@@ -46,9 +47,7 @@ class GeoTagCameraApp extends StatelessWidget {
               centerTitle: true,
             ),
             scaffoldBackgroundColor: Colors.black,
-            iconTheme: const IconThemeData(
-              color: Colors.white,
-            ),
+            iconTheme: const IconThemeData(color: Colors.white),
             textTheme: const TextTheme(
               bodyLarge: TextStyle(color: Colors.white),
               bodyMedium: TextStyle(color: Colors.white),

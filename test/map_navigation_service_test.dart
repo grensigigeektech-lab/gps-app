@@ -19,7 +19,7 @@ void main() {
             {
               'place_name': 'Surat, Gujarat, India',
               'center': [72.8311, 21.1702],
-            }
+            },
           ],
         }),
       );
@@ -34,6 +34,55 @@ void main() {
         () => MapNavigationService.parseGeocodingResponse(
           200,
           jsonEncode({'features': []}),
+        ),
+        throwsA(
+          isA<MapNavigationException>().having(
+            (error) => error.type,
+            'type',
+            MapNavigationErrorType.invalidDestination,
+          ),
+        ),
+      );
+    });
+
+    test('rejects blank destination before requesting location', () async {
+      await expectLater(
+        MapNavigationService.createRouteToDestination('   '),
+        throwsA(
+          isA<MapNavigationException>().having(
+            (error) => error.type,
+            'type',
+            MapNavigationErrorType.invalidDestination,
+          ),
+        ),
+      );
+    });
+
+    test('classifies rejected Mapbox token without decoding body', () {
+      expect(
+        () => MapNavigationService.parseGeocodingResponse(401, 'Unauthorized'),
+        throwsA(
+          isA<MapNavigationException>().having(
+            (error) => error.type,
+            'type',
+            MapNavigationErrorType.mapboxConfiguration,
+          ),
+        ),
+      );
+    });
+
+    test('classifies invalid geocoding coordinates as invalid destination', () {
+      expect(
+        () => MapNavigationService.parseGeocodingResponse(
+          200,
+          jsonEncode({
+            'features': [
+              {
+                'place_name': 'Broken result',
+                'center': ['not-a-number', 21.1702],
+              },
+            ],
+          }),
         ),
         throwsA(
           isA<MapNavigationException>().having(
@@ -61,7 +110,7 @@ void main() {
                   [72.9, 21.2],
                 ],
               },
-            }
+            },
           ],
         }),
         origin: origin,
@@ -79,6 +128,56 @@ void main() {
         () => MapNavigationService.parseDirectionsResponse(
           statusCode: 200,
           body: jsonEncode({'code': 'NoRoute', 'routes': []}),
+          origin: origin,
+          destination: destination,
+        ),
+        throwsA(
+          isA<MapNavigationException>().having(
+            (error) => error.type,
+            'type',
+            MapNavigationErrorType.noRoute,
+          ),
+        ),
+      );
+    });
+
+    test('classifies non-success NoRoute response as no route', () {
+      expect(
+        () => MapNavigationService.parseDirectionsResponse(
+          statusCode: 422,
+          body: jsonEncode({'code': 'NoRoute', 'routes': []}),
+          origin: origin,
+          destination: destination,
+        ),
+        throwsA(
+          isA<MapNavigationException>().having(
+            (error) => error.type,
+            'type',
+            MapNavigationErrorType.noRoute,
+          ),
+        ),
+      );
+    });
+
+    test('rejects negative route metrics', () {
+      expect(
+        () => MapNavigationService.parseDirectionsResponse(
+          statusCode: 200,
+          body: jsonEncode({
+            'code': 'Ok',
+            'routes': [
+              {
+                'distance': -1,
+                'duration': 10,
+                'geometry': {
+                  'coordinates': [
+                    [72.8, 21.1],
+                    [72.9, 21.2],
+                  ],
+                },
+              },
+            ],
+          }),
           origin: origin,
           destination: destination,
         ),

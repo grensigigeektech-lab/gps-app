@@ -12,7 +12,7 @@ import '../config/mapbox_config.dart';
 import '../routes/app_routes.dart';
 
 class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
-  const EnhancedCameraScreen({Key? key}) : super(key: key);
+  const EnhancedCameraScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +44,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
               right: 0,
               child: Container(
                 height: 60,
-                color: Colors.black.withOpacity(0.8),
+                color: Colors.black.withValues(alpha: 0.8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -107,7 +107,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -139,7 +139,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                             'map_${controller.latitude.value}_${controller.longitude.value}',
                           ),
                           styleUri: MapboxConfig.streetStyle,
-                          cameraOptions: CameraOptions(
+                          viewport: CameraViewportState(
                             center: Point(
                               coordinates: Position(
                                 controller.longitude.value,
@@ -184,7 +184,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                         border: Border.all(color: Colors.white, width: 3),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.red.withOpacity(0.5),
+                            color: Colors.red.withValues(alpha: 0.5),
                             blurRadius: 8,
                             spreadRadius: 2,
                           ),
@@ -203,7 +203,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -353,7 +353,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
       height: 50,
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.8),
+        color: Colors.black.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(25),
       ),
       child: Row(
@@ -516,7 +516,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
           border: Border.all(color: Colors.grey.shade300, width: 3),
           boxShadow: [
             BoxShadow(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               blurRadius: 15,
               spreadRadius: 2,
             ),
@@ -529,6 +529,8 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
 }
 
 class EnhancedCameraController extends GetxController {
+  Timer? _dateTimeTimer;
+
   // Camera
   CameraController? cameraController;
   RxBool isInitialized = false.obs;
@@ -560,10 +562,15 @@ class EnhancedCameraController extends GetxController {
     _initializeCamera();
     _initializeLocation();
     _updateDateTime();
+    _dateTimeTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _updateDateTime(),
+    );
   }
 
   @override
   void onClose() {
+    _dateTimeTimer?.cancel();
     cameraController?.dispose();
     MapboxLocationService.dispose();
     MapboxService.dispose();
@@ -677,9 +684,6 @@ class EnhancedCameraController extends GetxController {
     dateInfo.value = '${now.day}/${now.month}/${now.year}';
     timeInfo.value =
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-
-    // Update every minute
-    Timer.periodic(const Duration(minutes: 1), (_) => _updateDateTime());
   }
 
   Future<void> capturePhoto() async {
@@ -699,7 +703,7 @@ class MapGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, ui.Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
+      ..color = Colors.white.withValues(alpha: 0.1)
       ..strokeWidth = 1;
 
     const gridSize = 20.0;

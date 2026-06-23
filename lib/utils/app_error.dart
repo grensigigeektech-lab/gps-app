@@ -3,11 +3,7 @@ class AppError {
   final String? details;
   final AppErrorType type;
 
-  AppError({
-    required this.message,
-    this.details,
-    required this.type,
-  });
+  AppError({required this.message, this.details, required this.type});
 
   @override
   String toString() {
@@ -15,14 +11,7 @@ class AppError {
   }
 }
 
-enum AppErrorType {
-  camera,
-  location,
-  storage,
-  network,
-  permission,
-  unknown,
-}
+enum AppErrorType { camera, location, storage, network, permission, unknown }
 
 class AppErrorHandler {
   static AppError handleError(dynamic error) {
@@ -49,11 +38,7 @@ class AppErrorHandler {
       type = AppErrorType.network;
     }
 
-    return AppError(
-      message: message,
-      details: details,
-      type: type,
-    );
+    return AppError(message: message, details: details, type: type);
   }
 
   static String getErrorMessage(AppError error) {
@@ -69,7 +54,6 @@ class AppErrorHandler {
       case AppErrorType.network:
         return 'Network error. Please check your internet connection.';
       case AppErrorType.unknown:
-      default:
         return error.message;
     }
   }

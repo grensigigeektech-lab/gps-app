@@ -26,6 +26,19 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+// CameraX 1.6 marks concurrent-futures as a runtime dependency even though its
+// public API exposes CallbackToFutureAdapter during Java compilation.
+subprojects {
+    if (name == "camera_android_camerax") {
+        pluginManager.withPlugin("com.android.library") {
+            dependencies.add(
+                "implementation",
+                "androidx.concurrent:concurrent-futures:1.1.0",
+            )
+        }
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }

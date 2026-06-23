@@ -19,20 +19,37 @@ class MapNavigationScreen extends GetView<MapNavigationController> {
         body: Stack(
           children: [
             Positioned.fill(
-              child: MapWidget(
-                key: const ValueKey('navigation_map'),
-                styleUri: MapboxConfig.streetStyle,
-                cameraOptions: CameraOptions(
-                  center: Point(
-                    coordinates: Position(
-                      MapboxConfig.defaultLongitude,
-                      MapboxConfig.defaultLatitude,
+              child: MapboxConfig.hasValidAccessToken
+                  ? MapWidget(
+                      key: const ValueKey('navigation_map'),
+                      styleUri: MapboxConfig.streetStyle,
+                      viewport: CameraViewportState(
+                        center: Point(
+                          coordinates: Position(
+                            MapboxConfig.defaultLongitude,
+                            MapboxConfig.defaultLatitude,
+                          ),
+                        ),
+                        zoom: 12,
+                      ),
+                      onMapCreated: controller.onMapCreated,
+                      onMapLoadedListener: controller.onMapLoaded,
+                      onMapLoadErrorListener: controller.onMapLoadError,
+                    )
+                  : const ColoredBox(
+                      color: Color(0xFF111827),
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32),
+                          child: Text(
+                            'Mapbox is not configured. Add a public access '
+                            'token with MAPBOX_ACCESS_TOKEN to load the map.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  zoom: 12,
-                ),
-                onMapCreated: controller.onMapCreated,
-              ),
             ),
             Positioned(
               top: 12,
@@ -47,31 +64,32 @@ class MapNavigationScreen extends GetView<MapNavigationController> {
               child: Obx(() => _buildBottomPanel(context)),
             ),
             Obx(() {
-              if (!controller.isBusy) {
+              if (!controller.isShowingLoading) {
                 return const SizedBox.shrink();
               }
 
               return Positioned.fill(
                 child: Container(
-                  color: Colors.black.withOpacity(0.28),
+                  color: Colors.black.withValues(alpha: 0.28),
                   child: Center(
                     child: Container(
                       width: 230,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.86),
+                        color: Colors.black.withValues(alpha: 0.86),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            controller.loadingMessage.value,
+                            controller.visibleLoadingMessage,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
@@ -96,9 +114,9 @@ class MapNavigationScreen extends GetView<MapNavigationController> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.84),
+        color: Colors.black.withValues(alpha: 0.84),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -131,8 +149,9 @@ class MapNavigationScreen extends GetView<MapNavigationController> {
                         },
                   icon: Icon(
                     Icons.my_location,
-                    color:
-                        controller.isBusy ? Colors.grey.shade600 : Colors.white,
+                    color: controller.isBusy
+                        ? Colors.grey.shade600
+                        : Colors.white,
                   ),
                 ),
               ),
@@ -150,12 +169,9 @@ class MapNavigationScreen extends GetView<MapNavigationController> {
                   decoration: InputDecoration(
                     hintText: 'Enter destination',
                     hintStyle: TextStyle(color: Colors.grey.shade500),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: Colors.grey.shade400,
-                    ),
+                    prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.08),
+                    fillColor: Colors.white.withValues(alpha: 0.08),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 14,
@@ -203,7 +219,7 @@ class MapNavigationScreen extends GetView<MapNavigationController> {
               margin: const EdgeInsets.only(top: 12),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.shade700.withOpacity(0.9),
+                color: Colors.red.shade700.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -252,7 +268,7 @@ class MapNavigationScreen extends GetView<MapNavigationController> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -320,9 +336,9 @@ class MapNavigationScreen extends GetView<MapNavigationController> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.82),
+        color: Colors.black.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
         children: [
@@ -396,6 +412,7 @@ class MapNavigationController extends GetxController {
   final TextEditingController destinationController = TextEditingController();
 
   final RxBool isMapReady = false.obs;
+  final RxBool isMapLoading = MapboxConfig.hasValidAccessToken.obs;
   final RxBool isLoadingLocation = false.obs;
   final RxBool isRouting = false.obs;
   final RxString loadingMessage = ''.obs;
@@ -411,6 +428,14 @@ class MapNavigationController extends GetxController {
   PolylineAnnotationManager? _routeLineManager;
 
   bool get isBusy => isLoadingLocation.value || isRouting.value;
+  bool get isShowingLoading => isBusy || isMapLoading.value;
+
+  String get visibleLoadingMessage {
+    if (loadingMessage.value.isNotEmpty) {
+      return loadingMessage.value;
+    }
+    return 'Loading map...';
+  }
 
   bool get canOpenSettings {
     return _lastErrorType == MapNavigationErrorType.serviceDisabled ||
@@ -420,6 +445,15 @@ class MapNavigationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    if (!MapboxConfig.hasValidAccessToken) {
+      _setError(
+        const MapNavigationException(
+          MapNavigationErrorType.mapboxConfiguration,
+          'Mapbox is not configured. Add a public access token to use navigation.',
+        ),
+      );
+      return;
+    }
     detectCurrentLocation();
   }
 
@@ -490,20 +524,41 @@ class MapNavigationController extends GetxController {
   }
 
   Future<void> onMapCreated(MapboxMap mapboxMap) async {
-    _mapboxMap = mapboxMap;
-    _routeLineManager =
-        await mapboxMap.annotations.createPolylineAnnotationManager();
-    _markerManager =
-        await mapboxMap.annotations.createCircleAnnotationManager();
-    _labelManager = await mapboxMap.annotations.createPointAnnotationManager();
-    isMapReady.value = true;
-    await _renderMapState();
+    try {
+      _mapboxMap = mapboxMap;
+      _routeLineManager = await mapboxMap.annotations
+          .createPolylineAnnotationManager();
+      _markerManager = await mapboxMap.annotations
+          .createCircleAnnotationManager();
+      _labelManager = await mapboxMap.annotations
+          .createPointAnnotationManager();
+      isMapReady.value = true;
+      await _renderMapState();
 
-    if (activeRoute.value != null) {
-      await fitRouteCamera();
-    } else {
-      await _focusOnCurrentLocation();
+      if (activeRoute.value != null) {
+        await fitRouteCamera();
+      } else {
+        await _focusOnCurrentLocation();
+      }
+    } catch (error) {
+      isMapLoading.value = false;
+      _setMapError(error);
     }
+  }
+
+  void onMapLoaded(MapLoadedEventData _) {
+    isMapLoading.value = false;
+    if (_lastErrorType == MapNavigationErrorType.mapUnavailable) {
+      _clearError();
+    }
+  }
+
+  void onMapLoadError(MapLoadingErrorEventData event) {
+    isMapLoading.value = false;
+    if (_lastErrorType == MapNavigationErrorType.mapUnavailable) {
+      return;
+    }
+    _setMapError(event.message);
   }
 
   Future<void> fitRouteCamera() async {
@@ -514,21 +569,25 @@ class MapNavigationController extends GetxController {
       return;
     }
 
-    final points = route.routePoints.map(_toPoint).toList(growable: false);
-    final camera = await mapboxMap.cameraForCoordinatesPadding(
-      points,
-      CameraOptions(bearing: 0, pitch: 0),
-      MbxEdgeInsets(top: 130, left: 40, bottom: 230, right: 40),
-      MapboxConfig.maxZoom,
-      null,
-    );
+    try {
+      final points = route.routePoints.map(_toPoint).toList(growable: false);
+      final camera = await mapboxMap.cameraForCoordinatesPadding(
+        points,
+        CameraOptions(bearing: 0, pitch: 0),
+        MbxEdgeInsets(top: 130, left: 40, bottom: 230, right: 40),
+        MapboxConfig.maxZoom,
+        null,
+      );
 
-    await mapboxMap.easeTo(
-      camera,
-      MapAnimationOptions(
-        duration: MapboxConfig.animationDuration.inMilliseconds,
-      ),
-    );
+      await mapboxMap.easeTo(
+        camera,
+        MapAnimationOptions(
+          duration: MapboxConfig.animationDuration.inMilliseconds,
+        ),
+      );
+    } catch (error) {
+      _setMapError(error);
+    }
   }
 
   Future<void> clearRoute() async {
@@ -553,30 +612,34 @@ class MapNavigationController extends GetxController {
   Future<void> _renderMapState() async {
     if (!isMapReady.value) return;
 
-    await _routeLineManager?.deleteAll();
-    await _markerManager?.deleteAll();
-    await _labelManager?.deleteAll();
+    try {
+      await _routeLineManager?.deleteAll();
+      await _markerManager?.deleteAll();
+      await _labelManager?.deleteAll();
 
-    final route = activeRoute.value;
-    if (route != null) {
-      await _routeLineManager?.create(
-        PolylineAnnotationOptions(
-          geometry: LineString.fromPoints(
-            points: route.routePoints.map(_toPoint).toList(growable: false),
+      final route = activeRoute.value;
+      if (route != null) {
+        await _routeLineManager?.create(
+          PolylineAnnotationOptions(
+            geometry: LineString.fromPoints(
+              points: route.routePoints.map(_toPoint).toList(growable: false),
+            ),
+            lineColor: 0xFF1976D2,
+            lineOpacity: 0.95,
+            lineWidth: 6,
           ),
-          lineColor: 0xFF1976D2,
-          lineOpacity: 0.95,
-          lineWidth: 6,
-        ),
-      );
-      await _addMarker(route.origin, 'Current', 0xFF2E7D32);
-      await _addMarker(route.destination, 'Destination', 0xFFC62828);
-      return;
-    }
+        );
+        await _addMarker(route.origin, 'Current', 0xFF2E7D32);
+        await _addMarker(route.destination, 'Destination', 0xFFC62828);
+        return;
+      }
 
-    final current = currentCoordinate.value;
-    if (current != null) {
-      await _addMarker(current, 'Current', 0xFF2E7D32);
+      final current = currentCoordinate.value;
+      if (current != null) {
+        await _addMarker(current, 'Current', 0xFF2E7D32);
+      }
+    } catch (error) {
+      _setMapError(error);
     }
   }
 
@@ -617,17 +680,21 @@ class MapNavigationController extends GetxController {
       return;
     }
 
-    await mapboxMap.easeTo(
-      CameraOptions(
-        center: _toPoint(current),
-        zoom: MapboxConfig.defaultZoom,
-        bearing: 0,
-        pitch: 0,
-      ),
-      MapAnimationOptions(
-        duration: MapboxConfig.animationDuration.inMilliseconds,
-      ),
-    );
+    try {
+      await mapboxMap.easeTo(
+        CameraOptions(
+          center: _toPoint(current),
+          zoom: MapboxConfig.defaultZoom,
+          bearing: 0,
+          pitch: 0,
+        ),
+        MapAnimationOptions(
+          duration: MapboxConfig.animationDuration.inMilliseconds,
+        ),
+      );
+    } catch (error) {
+      _setMapError(error);
+    }
   }
 
   Point _toPoint(NavigationCoordinate coordinate) {
@@ -646,6 +713,16 @@ class MapNavigationController extends GetxController {
       backgroundColor: Colors.red.shade700,
       colorText: Colors.white,
       margin: const EdgeInsets.all(16),
+    );
+  }
+
+  void _setMapError(Object error) {
+    _setError(
+      MapNavigationException(
+        MapNavigationErrorType.mapUnavailable,
+        'The map could not be loaded. Check your connection and try again.',
+        cause: error,
+      ),
     );
   }
 

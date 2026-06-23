@@ -1,11 +1,12 @@
 class MapboxConfig {
-  // Replace this with your actual Mapbox API key
-  // You can get one from: https://account.mapbox.com/access-tokens/
-  static const String accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN';
+  static const String accessToken = String.fromEnvironment(
+    'MAPBOX_ACCESS_TOKEN',
+    defaultValue: 'YOUR_MAPBOX_ACCESS_TOKEN',
+  );
 
   static bool get hasValidAccessToken {
     final token = accessToken.trim();
-    return token.isNotEmpty && token != 'YOUR_MAPBOX_ACCESS_TOKEN';
+    return token.startsWith('pk.') && token != 'YOUR_MAPBOX_ACCESS_TOKEN';
   }
 
   // Map styles
