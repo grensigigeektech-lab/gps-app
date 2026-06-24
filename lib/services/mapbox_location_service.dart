@@ -162,7 +162,7 @@ class MapboxLocationService {
           'https://api.mapbox.com/geocoding/v5/mapbox.places/$longitude,$latitude.json'
           '?access_token=${MapboxConfig.accessToken}&limit=1&types=address,place,neighborhood,locality,region';
 
-      debugPrint('MapboxLocationService: Fetching address: $url');
+      debugPrint('MapboxLocationService: Fetching current-location address.');
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {

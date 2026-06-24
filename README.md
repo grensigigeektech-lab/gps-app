@@ -9,11 +9,12 @@ A Flutter application that captures photos with automatic geotag information ove
 - **Image Overlay**: Adds geotag information (coordinates, address, timestamp) as overlay on captured images
 - **Save & Share**: Save processed images to device gallery and share with other apps
 - **Permission Handling**: Graceful permission requests for camera, location, and storage
+- **Map Navigation**: Destination search, route drawing, automatic camera fit, distance, and travel-time estimates
 - **Material 3 UI**: Clean, modern interface following Material Design 3 guidelines
 
 ## Requirements
 
-- Flutter SDK (>= 3.11.0)
+- Flutter SDK (>= 3.38.4)
 - Android: API level 21+ (Android 5.0)
 - iOS: iOS 11.0+
 
@@ -59,12 +60,13 @@ The app requires the following permissions:
 lib/
 ├── main.dart                 # App entry point
 ├── screens/
-│   ├── camera_screen.dart    # Camera preview and capture
-│   └── preview_screen.dart   # Image preview with overlay
+│   ├── enhanced_camera_screen.dart # Camera preview and capture
+│   └── map_navigation_screen.dart  # Map route search and results
 ├── services/
 │   ├── camera_service.dart   # Camera operations
 │   ├── location_service.dart # GPS and geocoding
-│   └── image_service.dart    # Image processing and overlay
+│   ├── image_service.dart    # Image processing and overlay
+│   └── map_navigation_service.dart # Destination geocoding and directions
 ├── widgets/
 │   └── permission_dialog.dart # Permission request dialog
 └── utils/
@@ -75,17 +77,17 @@ lib/
 
 1. **Launch the App**: Open the app and grant required permissions
 2. **Camera Preview**: View live camera feed with location status
-3. **Capture Photo**: Tap the capture button to take a photo
-4. **Preview**: Review the captured image with geotag overlay
-5. **Save/Share**: Save to gallery or share with other apps
+3. **Open Navigation**: Tap **Map Data**, enter a destination, and generate a route
+4. **Review Route**: See both markers, the complete route, distance, and estimated travel time
+5. **Capture Photo**: Return to the camera and tap the capture button
 
 ## Key Dependencies
 
-- `camera: ^1.3.0` - Camera functionality
+- `camera: ^0.12.0+1` - Camera functionality
 - `geolocator: ^10.1.0` - GPS location services
-- `geocoding: ^3.0.0` - Address geocoding
+- `geocoding: ^2.1.1` - Address geocoding
+- `mapbox_maps_flutter: ^2.23.0` - Maps and route visualization
 - `screenshot: ^3.0.0` - Widget to image conversion
-- `gallery_saver: ^2.3.3` - Save images to gallery
 - `share_plus: ^9.0.0` - Share functionality
 - `permission_handler: ^11.3.1` - Permission management
 - `flutter_screenutil: ^5.9.3` - Responsive design

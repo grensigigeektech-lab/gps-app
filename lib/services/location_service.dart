@@ -174,7 +174,7 @@ class LocationService {
       debugPrint('LocationService error: $e');
       return LocationResult.failure(
         LocationError.unknown,
-        'Unexpected error: $e',
+        'Could not determine your current location. Please try again.',
       );
     } finally {
       _isGettingLocation = false;
@@ -200,7 +200,7 @@ class LocationService {
           'https://api.mapbox.com/geocoding/v5/mapbox.places/$longitude,$latitude.json'
           '?access_token=${MapboxConfig.accessToken}&limit=1&types=address,place,neighborhood,locality,region';
 
-      debugPrint('Fetching address from Mapbox: $url');
+      debugPrint('Fetching current-location address from Mapbox.');
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {

@@ -246,6 +246,19 @@ class MapNavigationScreen extends GetView<MapNavigationController> {
                       icon: const Icon(Icons.settings, size: 18),
                       label: const Text('Open Settings'),
                     ),
+                  ] else if (controller.canRetry) ...[
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: controller.retryLastAction,
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: const Text('Try again'),
+                    ),
                   ],
                 ],
               ),
@@ -442,6 +455,13 @@ class MapNavigationController extends GetxController {
         _lastErrorType == MapNavigationErrorType.permissionPermanentlyDenied;
   }
 
+  bool get canRetry {
+    return _lastErrorType == MapNavigationErrorType.permissionDenied ||
+        _lastErrorType == MapNavigationErrorType.locationUnavailable ||
+        _lastErrorType == MapNavigationErrorType.network ||
+        _lastErrorType == MapNavigationErrorType.unknown;
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -570,7 +590,11 @@ class MapNavigationController extends GetxController {
     }
 
     try {
-      final points = route.routePoints.map(_toPoint).toList(growable: false);
+      final points = <Point>[
+        _toPoint(route.origin),
+        ...route.routePoints.map(_toPoint),
+        _toPoint(route.destination),
+      ];
       final camera = await mapboxMap.cameraForCoordinatesPadding(
         points,
         CameraOptions(bearing: 0, pitch: 0),
@@ -607,6 +631,17 @@ class MapNavigationController extends GetxController {
     if (_lastErrorType == MapNavigationErrorType.permissionPermanentlyDenied) {
       await openAppSettings();
     }
+  }
+
+  Future<void> retryLastAction() async {
+    final errorType = _lastErrorType;
+    if (errorType == MapNavigationErrorType.network &&
+        destinationController.text.trim().isNotEmpty) {
+      await buildRoute();
+      return;
+    }
+
+    await detectCurrentLocation(forceRefresh: true);
   }
 
   Future<void> _renderMapState() async {
