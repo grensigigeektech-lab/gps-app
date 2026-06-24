@@ -6,13 +6,14 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:camera/camera.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import '../../services/mapbox_location_service.dart';
-import '../../services/compass_service.dart';
-import '../../services/mapbox_service.dart';
-import '../../config/mapbox_config.dart';
+import '../config/mapbox_config.dart';
+import '../routes/app_routes.dart';
+import '../services/compass_service.dart';
+import '../services/mapbox_location_service.dart';
+import '../services/mapbox_service.dart';
 
 class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
-  const EnhancedCameraScreen({Key? key}) : super(key: key);
+  const EnhancedCameraScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -452,7 +453,11 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         _buildBottomNavIcon(Icons.photo_library, 'Collection'),
-        _buildBottomNavIcon(Icons.map, 'Map Data'),
+        _buildBottomNavIcon(
+          Icons.map,
+          'Map Data',
+          onTap: () => Get.toNamed(AppRoutes.mapNavigation),
+        ),
         _buildCameraButton(),
         _buildBottomNavIcon(Icons.flight, 'USA Trip'),
         _buildBottomNavIcon(Icons.dashboard, 'Template'),
@@ -460,11 +465,15 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
     );
   }
 
-  Widget _buildBottomNavIcon(IconData icon, String label) {
+  Widget _buildBottomNavIcon(
+    IconData icon,
+    String label, {
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        // Handle navigation
+        onTap?.call();
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,

@@ -15,8 +15,9 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Initialize Mapbox SDK with access token
-  MapboxOptions.setAccessToken(MapboxConfig.accessToken);
+  if (MapboxConfig.isConfigured) {
+    MapboxOptions.setAccessToken(MapboxConfig.accessToken);
+  }
 
   runApp(const GeoTagCameraApp());
 }

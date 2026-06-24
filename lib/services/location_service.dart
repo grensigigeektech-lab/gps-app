@@ -77,6 +77,11 @@ class LocationService {
     return await Geolocator.isLocationServiceEnabled();
   }
 
+  static Future<bool> openAppSettings() => Geolocator.openAppSettings();
+
+  static Future<bool> openLocationSettings() =>
+      Geolocator.openLocationSettings();
+
   static Future<LocationResult> getCurrentLocationResult(
       {bool forceRefresh = false}) async {
     if (_isGettingLocation && !forceRefresh) {

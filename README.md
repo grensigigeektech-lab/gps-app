@@ -9,6 +9,7 @@ A Flutter application that captures photos with automatic geotag information ove
 - **Image Overlay**: Adds geotag information (coordinates, address, timestamp) as overlay on captured images
 - **Save & Share**: Save processed images to device gallery and share with other apps
 - **Permission Handling**: Graceful permission requests for camera, location, and storage
+- **Map Navigation**: Destination search, driving routes, distance, and travel time
 - **Material 3 UI**: Clean, modern interface following Material Design 3 guidelines
 
 ## Requirements
@@ -78,6 +79,7 @@ lib/
 3. **Capture Photo**: Tap the capture button to take a photo
 4. **Preview**: Review the captured image with geotag overlay
 5. **Save/Share**: Save to gallery or share with other apps
+6. **Navigate**: Open Map Data, enter a destination, and review the fitted route
 
 ## Key Dependencies
 
