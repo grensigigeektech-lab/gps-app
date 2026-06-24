@@ -10,13 +10,7 @@ import '../config/mapbox_config.dart';
 import '../services/location_service.dart';
 import '../services/mapbox_navigation_service.dart';
 
-enum NavigationViewState {
-  locating,
-  ready,
-  calculating,
-  routeReady,
-  error,
-}
+enum NavigationViewState { locating, ready, calculating, routeReady, error }
 
 enum NavigationRecoveryAction {
   retryLocation,
@@ -28,7 +22,7 @@ enum NavigationRecoveryAction {
 class MapNavigationController extends GetxController
     with WidgetsBindingObserver {
   MapNavigationController({MapboxNavigationService? navigationService})
-      : _navigationService = navigationService ?? MapboxNavigationService();
+    : _navigationService = navigationService ?? MapboxNavigationService();
 
   final MapboxNavigationService _navigationService;
   final destinationController = TextEditingController();
@@ -125,21 +119,24 @@ class MapNavigationController extends GetxController
       case LocationError.permissionPermanentlyDenied:
         _setError(
           title: 'Location permission required',
-          message: result.errorMessage ??
+          message:
+              result.errorMessage ??
               'Allow location access in Settings to use navigation.',
           action: NavigationRecoveryAction.openAppSettings,
         );
       case LocationError.permissionDenied:
         _setError(
           title: 'Location permission denied',
-          message: result.errorMessage ??
+          message:
+              result.errorMessage ??
               'Location access is required to calculate a route.',
           action: NavigationRecoveryAction.retryLocation,
         );
       case LocationError.timeout:
         _setError(
           title: 'Location unavailable',
-          message: result.errorMessage ??
+          message:
+              result.errorMessage ??
               'Could not determine your location. Check your GPS signal.',
           action: NavigationRecoveryAction.retryLocation,
         );
@@ -184,8 +181,9 @@ class MapNavigationController extends GetxController
     await _showCurrentLocation(centerCamera: false);
 
     try {
-      final resolvedDestination =
-          await _navigationService.geocodeDestination(query);
+      final resolvedDestination = await _navigationService.geocodeDestination(
+        query,
+      );
       final resolvedRoute = await _navigationService.getDrivingRoute(
         origin: currentLocation.value!,
         destination: resolvedDestination.coordinate,
@@ -258,10 +256,7 @@ class MapNavigationController extends GetxController
     }
 
     await map.easeTo(
-      CameraOptions(
-        center: _point(location),
-        zoom: MapboxConfig.defaultZoom,
-      ),
+      CameraOptions(center: _point(location), zoom: MapboxConfig.defaultZoom),
       MapAnimationOptions(duration: 650),
     );
   }
@@ -273,10 +268,10 @@ class MapNavigationController extends GetxController
     }
 
     try {
-      _polylineAnnotationManager =
-          await map.annotations.createPolylineAnnotationManager();
-      _pointAnnotationManager =
-          await map.annotations.createPointAnnotationManager();
+      _polylineAnnotationManager = await map.annotations
+          .createPolylineAnnotationManager();
+      _pointAnnotationManager = await map.annotations
+          .createPointAnnotationManager();
       await _polylineAnnotationManager!.setLineCap(LineCap.ROUND);
       await _pointAnnotationManager!.setIconAllowOverlap(true);
       isMapReady.value = true;
@@ -308,20 +303,17 @@ class MapNavigationController extends GetxController
       return;
     }
 
-    await Future.wait([
-      lineManager.deleteAll(),
-      pointManager.deleteAll(),
-    ]);
+    await Future.wait([lineManager.deleteAll(), pointManager.deleteAll()]);
 
     final routePoints = activeRoute.coordinates.map(_point).toList();
     await lineManager.create(
       PolylineAnnotationOptions(
         geometry: LineString(
           coordinates: activeRoute.coordinates
-              .map((coordinate) => Position(
-                    coordinate.longitude,
-                    coordinate.latitude,
-                  ))
+              .map(
+                (coordinate) =>
+                    Position(coordinate.longitude, coordinate.latitude),
+              )
               .toList(),
         ),
         lineColor: const Color(0xFF2563EB).toARGB32(),
@@ -356,19 +348,10 @@ class MapNavigationController extends GetxController
       ),
     ]);
 
-    final padding = MbxEdgeInsets(
-      top: 130,
-      left: 48,
-      bottom: 190,
-      right: 48,
-    );
+    final padding = MbxEdgeInsets(top: 130, left: 48, bottom: 190, right: 48);
     final camera = await map.cameraForCoordinatesPadding(
       routePoints,
-      CameraOptions(
-        bearing: 0,
-        pitch: 0,
-        padding: padding,
-      ),
+      CameraOptions(bearing: 0, pitch: 0, padding: padding),
       padding,
       16,
       null,
@@ -465,8 +448,10 @@ class MapNavigationController extends GetxController
     }
 
     final picture = recorder.endRecording();
-    final image =
-        await picture.toImage(size.width.round(), size.height.round());
+    final image = await picture.toImage(
+      size.width.round(),
+      size.height.round(),
+    );
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     if (bytes == null) {
       throw StateError('Could not create a map marker.');

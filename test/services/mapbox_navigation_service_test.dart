@@ -10,8 +10,7 @@ void main() {
         expect(request.url.host, 'api.mapbox.com');
         expect(request.url.pathSegments.last, 'Mumbai, India.json');
         expect(request.url.queryParameters['limit'], '1');
-        return http.Response(
-          '''
+        return http.Response('''
           {
             "features": [
               {
@@ -20,9 +19,7 @@ void main() {
               }
             ]
           }
-          ''',
-          200,
-        );
+          ''', 200);
       });
       final service = MapboxNavigationService(
         client: client,
@@ -56,9 +53,7 @@ void main() {
 
     test('reports a destination that cannot be found', () async {
       final service = MapboxNavigationService(
-        client: MockClient(
-          (_) async => http.Response('{"features": []}', 200),
-        ),
+        client: MockClient((_) async => http.Response('{"features": []}', 200)),
         accessToken: 'pk.test',
       );
 
@@ -77,15 +72,16 @@ void main() {
 
   group('MapboxNavigationService routing', () {
     const origin = NavigationCoordinate(latitude: 21.1702, longitude: 72.8311);
-    const destination =
-        NavigationCoordinate(latitude: 19.0760, longitude: 72.8777);
+    const destination = NavigationCoordinate(
+      latitude: 19.0760,
+      longitude: 72.8777,
+    );
 
     test('parses route geometry, distance, and travel time', () async {
       final client = MockClient((request) async {
         expect(request.url.pathSegments, contains('driving'));
         expect(request.url.queryParameters['geometries'], 'geojson');
-        return http.Response(
-          '''
+        return http.Response('''
           {
             "code": "Ok",
             "routes": [
@@ -102,9 +98,7 @@ void main() {
               }
             ]
           }
-          ''',
-          200,
-        );
+          ''', 200);
       });
       final service = MapboxNavigationService(
         client: client,
@@ -133,10 +127,7 @@ void main() {
       );
 
       expect(
-        () => service.getDrivingRoute(
-          origin: origin,
-          destination: destination,
-        ),
+        () => service.getDrivingRoute(origin: origin, destination: destination),
         throwsA(
           isA<NavigationFailure>().having(
             (failure) => failure.type,
@@ -154,10 +145,7 @@ void main() {
       );
 
       expect(
-        () => service.getDrivingRoute(
-          origin: origin,
-          destination: destination,
-        ),
+        () => service.getDrivingRoute(origin: origin, destination: destination),
         throwsA(
           isA<NavigationFailure>().having(
             (failure) => failure.type,
@@ -175,10 +163,7 @@ void main() {
       );
 
       expect(
-        () => service.getDrivingRoute(
-          origin: origin,
-          destination: destination,
-        ),
+        () => service.getDrivingRoute(origin: origin, destination: destination),
         throwsA(
           isA<NavigationFailure>().having(
             (failure) => failure.type,

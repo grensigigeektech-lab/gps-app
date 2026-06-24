@@ -6,20 +6,14 @@ import 'package:http/http.dart' as http;
 import '../config/mapbox_config.dart';
 
 class NavigationCoordinate {
-  const NavigationCoordinate({
-    required this.latitude,
-    required this.longitude,
-  });
+  const NavigationCoordinate({required this.latitude, required this.longitude});
 
   final double latitude;
   final double longitude;
 }
 
 class NavigationDestination {
-  const NavigationDestination({
-    required this.name,
-    required this.coordinate,
-  });
+  const NavigationDestination({required this.name, required this.coordinate});
 
   final String name;
   final NavigationCoordinate coordinate;
@@ -79,8 +73,8 @@ class MapboxNavigationService {
     http.Client? client,
     this.accessToken = MapboxConfig.accessToken,
     this.requestTimeout = const Duration(seconds: 15),
-  })  : _client = client ?? http.Client(),
-        _ownsClient = client == null;
+  }) : _client = client ?? http.Client(),
+       _ownsClient = client == null;
 
   final http.Client _client;
   final bool _ownsClient;
@@ -100,12 +94,7 @@ class MapboxNavigationService {
     final uri = Uri(
       scheme: 'https',
       host: 'api.mapbox.com',
-      pathSegments: [
-        'geocoding',
-        'v5',
-        'mapbox.places',
-        '$query.json',
-      ],
+      pathSegments: ['geocoding', 'v5', 'mapbox.places', '$query.json'],
       queryParameters: {
         'access_token': accessToken,
         'autocomplete': 'false',
@@ -158,18 +147,13 @@ class MapboxNavigationService {
   }) async {
     _ensureConfigured();
 
-    final coordinates = '${origin.longitude},${origin.latitude};'
+    final coordinates =
+        '${origin.longitude},${origin.latitude};'
         '${destination.longitude},${destination.latitude}';
     final uri = Uri(
       scheme: 'https',
       host: 'api.mapbox.com',
-      pathSegments: [
-        'directions',
-        'v5',
-        'mapbox',
-        'driving',
-        coordinates,
-      ],
+      pathSegments: ['directions', 'v5', 'mapbox', 'driving', coordinates],
       queryParameters: {
         'access_token': accessToken,
         'alternatives': 'false',
@@ -201,8 +185,9 @@ class MapboxNavigationService {
     }
 
     final geometry = firstRoute['geometry'];
-    final routeCoordinates =
-        geometry is Map<String, dynamic> ? geometry['coordinates'] : null;
+    final routeCoordinates = geometry is Map<String, dynamic>
+        ? geometry['coordinates']
+        : null;
     final distance = firstRoute['distance'];
     final duration = firstRoute['duration'];
     if (routeCoordinates is! List ||
