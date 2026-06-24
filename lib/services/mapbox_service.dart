@@ -29,6 +29,10 @@ class MapboxService {
   }
 
   static void setMapController(MapboxMap controller) {
+    if (!identical(_mapController, controller)) {
+      _pointAnnotationManager = null;
+      _markers.clear();
+    }
     _mapController = controller;
   }
 
