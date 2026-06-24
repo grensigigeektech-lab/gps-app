@@ -27,12 +27,13 @@ jobs:
         run: flutter pub get
 
       - name: Verify formatting
-        run: >-
-          dart format --output=none --set-exit-if-changed
-          lib/screens/map_navigation_binding.dart
-          lib/screens/map_navigation_screen.dart
-          lib/services/mapbox_navigation_service.dart
-          test/services/mapbox_navigation_service_test.dart
+        run: |
+          dart format \
+            lib/screens/map_navigation_binding.dart \
+            lib/screens/map_navigation_screen.dart \
+            lib/services/mapbox_navigation_service.dart \
+            test/services/mapbox_navigation_service_test.dart
+          git diff --exit-code
 
       - name: Analyze
         run: flutter analyze
