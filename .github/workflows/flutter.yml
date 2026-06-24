@@ -1,0 +1,41 @@
+name: Flutter checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feature/map-navigation]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify formatting
+        run: >-
+          dart format --output=none --set-exit-if-changed
+          lib/screens/map_navigation_binding.dart
+          lib/screens/map_navigation_screen.dart
+          lib/services/mapbox_navigation_service.dart
+          test/services/mapbox_navigation_service_test.dart
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
