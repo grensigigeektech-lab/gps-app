@@ -539,6 +539,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
 class EnhancedCameraController extends GetxController {
   // Camera
   CameraController? cameraController;
+  Timer? _dateTimeTimer;
   RxBool isInitialized = false.obs;
 
   // Location Data
@@ -568,10 +569,15 @@ class EnhancedCameraController extends GetxController {
     _initializeCamera();
     _initializeLocation();
     _updateDateTime();
+    _dateTimeTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _updateDateTime(),
+    );
   }
 
   @override
   void onClose() {
+    _dateTimeTimer?.cancel();
     cameraController?.dispose();
     MapboxLocationService.dispose();
     MapboxService.dispose();
@@ -681,9 +687,6 @@ class EnhancedCameraController extends GetxController {
     final now = DateTime.now();
     dateInfo.value = '${now.day}/${now.month}/${now.year}';
     timeInfo.value = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    
-    // Update every minute
-    Timer.periodic(const Duration(minutes: 1), (_) => _updateDateTime());
   }
 
   Future<void> capturePhoto() async {
