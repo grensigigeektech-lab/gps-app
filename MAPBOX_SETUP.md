@@ -10,10 +10,13 @@
 
 ### 2. Configure API Key in Your App
 
-#### Option A: Using Config File (Recommended)
-Edit `lib/config/mapbox_config.dart`:
-```dart
-static const String accessToken = 'pk.your_actual_token_here';
+#### Option A: Using a Dart define (Recommended)
+Pass the public token when running or building the app. This avoids committing
+environment-specific tokens to source control:
+
+```bash
+flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.your_actual_token_here
+flutter build apk --dart-define=MAPBOX_ACCESS_TOKEN=pk.your_actual_token_here
 ```
 
 #### Option B: Using Android Manifest
@@ -46,6 +49,8 @@ flutter run
 - **Multiple Map Styles** (Street, Satellite, Dark, Light)
 - **Zoom Controls** with smooth animations
 - **Marker Placement** at current location
+- **Map Navigation** with destination search, driving routes, automatic camera
+  fitting, distance, and estimated travel time
 
 ### ✅ Beautiful UI/UX
 - **Location Overlay** (Top Left): Shows coordinates, address, timestamp
@@ -65,9 +70,9 @@ flutter run
 
 Access the map from the home screen:
 1. Launch the app
-2. Tap the **"Map"** button (middle option)
+2. Tap **"Map Data"** in the bottom bar or the location pin in the top bar
 3. Grant location permissions when prompted
-4. Enjoy the interactive map experience!
+4. Enter a destination and tap the directions button to build a route
 
 ## 🔧 Troubleshooting
 
