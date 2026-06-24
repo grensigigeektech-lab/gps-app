@@ -12,8 +12,8 @@ class NavigationCoordinate {
   final double longitude;
 }
 
-class NavigationDestination {
-  const NavigationDestination({required this.name, required this.coordinate});
+class NavigationPlace {
+  const NavigationPlace({required this.name, required this.coordinate});
 
   final String name;
   final NavigationCoordinate coordinate;
@@ -81,7 +81,7 @@ class MapboxNavigationService {
   final String accessToken;
   final Duration requestTimeout;
 
-  Future<NavigationDestination> geocodeDestination(String input) async {
+  Future<NavigationPlace> geocodeDestination(String input) async {
     final query = input.trim();
     if (query.length < 2) {
       throw const NavigationFailure(
@@ -132,7 +132,7 @@ class MapboxNavigationService {
     }
 
     final name = firstFeature['place_name'];
-    return NavigationDestination(
+    return NavigationPlace(
       name: name is String && name.trim().isNotEmpty ? name.trim() : query,
       coordinate: NavigationCoordinate(
         latitude: (center[1] as num).toDouble(),

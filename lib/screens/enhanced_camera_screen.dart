@@ -8,7 +8,6 @@ import 'package:camera/camera.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import '../config/mapbox_config.dart';
 import '../routes/app_routes.dart';
-import '../services/compass_service.dart';
 import '../services/mapbox_location_service.dart';
 import '../services/mapbox_service.dart';
 
@@ -41,7 +40,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
               right: 0,
               child: Container(
                 height: 60,
-                color: Colors.black.withOpacity(0.8),
+                color: Colors.black.withValues(alpha: 0.8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -108,7 +107,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -138,7 +137,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                       ? MapWidget(
                           key: ValueKey('map_${controller.latitude.value}_${controller.longitude.value}'),
                           styleUri: MapboxConfig.streetStyle,
-                          cameraOptions: CameraOptions(
+                          viewport: CameraViewportState(
                             center: Point(
                               coordinates: Position(
                                 controller.longitude.value,
@@ -184,7 +183,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.red.withOpacity(0.5),
+                            color: Colors.red.withValues(alpha: 0.5),
                             blurRadius: 8,
                             spreadRadius: 2,
                           ),
@@ -203,7 +202,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -348,7 +347,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
       height: 50,
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.8),
+        color: Colors.black.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(25),
       ),
       child: Row(
@@ -521,7 +520,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               blurRadius: 15,
               spreadRadius: 2,
             ),
@@ -584,7 +583,7 @@ class EnhancedCameraController extends GetxController {
       await MapboxService.initialize(MapboxConfig.accessToken);
       isMapboxInitialized.value = true;
     } catch (e) {
-      print('Error initializing Mapbox: $e');
+      debugPrint('Error initializing Mapbox: $e');
     }
   }
 
@@ -601,7 +600,7 @@ class EnhancedCameraController extends GetxController {
         isInitialized.value = true;
       }
     } catch (e) {
-      print('Error initializing camera: $e');
+      debugPrint('Error initializing camera: $e');
     }
   }
 
@@ -617,7 +616,7 @@ class EnhancedCameraController extends GetxController {
         });
       }
     } catch (e) {
-      print('Error initializing Mapbox location: $e');
+      debugPrint('Error initializing Mapbox location: $e');
     }
   }
 
@@ -628,7 +627,7 @@ class EnhancedCameraController extends GetxController {
         _updateLocationFromMapbox(locationData);
       }
     } catch (e) {
-      print('Error updating location: $e');
+      debugPrint('Error updating location: $e');
     }
   }
 
@@ -704,7 +703,7 @@ class MapGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, ui.Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
+      ..color = Colors.white.withValues(alpha: 0.1)
       ..strokeWidth = 1;
 
     const gridSize = 20.0;

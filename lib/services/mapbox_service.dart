@@ -35,14 +35,6 @@ class MapboxService {
     if (_mapController == null) return;
 
     try {
-      final cameraState = CameraState(
-        center: Point(coordinates: Position(longitude, latitude)),
-        zoom: MapboxConfig.defaultZoom,
-        padding: MbxEdgeInsets(top: 0, left: 0, bottom: 0, right: 0),
-        bearing: 0.0,
-        pitch: 0.0,
-      );
-      
       final cameraOptions = CameraOptions(
         center: Point(coordinates: Position(longitude, latitude)),
         zoom: MapboxConfig.defaultZoom,
@@ -73,6 +65,7 @@ class MapboxService {
       
       final pointAnnotationOptions = PointAnnotationOptions(
         geometry: Point(coordinates: Position(longitude, latitude)),
+        image: markerIconData,
         textField: title ?? '',
         textOpacity: 1.0,
         textSize: 12.0,
@@ -117,14 +110,6 @@ class MapboxService {
     if (_mapController == null) return;
 
     try {
-      final cameraState = CameraState(
-        center: Point(coordinates: Position(longitude, latitude)),
-        zoom: zoom ?? MapboxConfig.defaultZoom,
-        padding: MbxEdgeInsets(top: 0, left: 0, bottom: 0, right: 0),
-        bearing: 0.0,
-        pitch: 0.0,
-      );
-      
       final cameraOptions = CameraOptions(
         center: Point(coordinates: Position(longitude, latitude)),
         zoom: zoom ?? MapboxConfig.defaultZoom,

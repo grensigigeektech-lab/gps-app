@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geo;
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -124,7 +123,7 @@ class MapboxLocationService {
       // Get address from coordinates using Mapbox geocoding
       String? address;
       try {
-        address = await _getMapboxAddress(position!.latitude, position!.longitude).timeout(
+        address = await _getMapboxAddress(position.latitude, position.longitude).timeout(
           const Duration(seconds: 10),
           onTimeout: () => null,
         );
@@ -133,8 +132,8 @@ class MapboxLocationService {
       }
 
       _currentLocation = MapboxLocationInfo(
-        latitude: position!.latitude,
-        longitude: position!.longitude,
+        latitude: position.latitude,
+        longitude: position.longitude,
         address: address,
         timestamp: DateTime.now(),
       );

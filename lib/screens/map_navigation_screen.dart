@@ -29,7 +29,7 @@ class MapNavigationController extends GetxController
 
   final viewState = NavigationViewState.locating.obs;
   final currentLocation = Rxn<NavigationCoordinate>();
-  final destination = Rxn<NavigationDestination>();
+  final destination = Rxn<NavigationPlace>();
   final route = Rxn<NavigationRoute>();
   final errorTitle = ''.obs;
   final errorMessage = ''.obs;
@@ -528,7 +528,7 @@ class MapNavigationScreen extends GetView<MapNavigationController> {
               child: MapWidget(
                 key: const ValueKey('navigation_map'),
                 styleUri: MapboxConfig.streetStyle,
-                cameraOptions: CameraOptions(
+                viewport: CameraViewportState(
                   center: Point(coordinates: Position(78.9629, 20.5937)),
                   zoom: 3.5,
                 ),

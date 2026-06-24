@@ -20,15 +20,11 @@ class ImageService {
   ) async {
     try {
       // 1. Capture the overlay as an image
-      Uint8List? overlayBytes = await _screenshotController.captureFromWidget(
+      final overlayBytes = await _screenshotController.captureFromWidget(
         _buildOverlayWidget(locationInfo),
         context: null,
         pixelRatio: 2.0,
       );
-
-      if (overlayBytes == null) {
-        throw Exception('Failed to capture overlay');
-      }
 
       // 2. Load the original image
       File originalFile = File(originalImagePath);
@@ -192,7 +188,7 @@ class ImageService {
     double height,
   ) async {
     try {
-      Uint8List? overlayBytes = await _screenshotController.captureFromWidget(
+      final overlayBytes = await _screenshotController.captureFromWidget(
         Container(
           width: width,
           height: height * 0.25,
@@ -274,8 +270,6 @@ class ImageService {
         context: null,
         pixelRatio: 2.0,
       );
-
-      if (overlayBytes == null) return null;
 
       // Save to temporary file
       Directory? directory = await getTemporaryDirectory();

@@ -69,7 +69,6 @@ class AppErrorHandler {
       case AppErrorType.network:
         return 'Network error. Please check your internet connection.';
       case AppErrorType.unknown:
-      default:
         return error.message;
     }
   }

@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:sensors_plus/sensors_plus.dart';
-import 'package:sensors_plus/sensors_plus.dart' as MagnetometerSensor;
 
 class CompassService {
   static double _currentHeading = 0.0;
@@ -10,7 +9,7 @@ class CompassService {
   static double get currentHeading => _currentHeading;
 
   static void startListening() {
-    _subscription = MagnetometerSensor.magnetometerEventStream().listen((MagnetometerEvent event) {
+    _subscription = magnetometerEventStream().listen((MagnetometerEvent event) {
       // Calculate heading from magnetometer data
       final x = event.x;
       final y = event.y;

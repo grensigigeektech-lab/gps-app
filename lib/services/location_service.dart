@@ -156,14 +156,14 @@ class LocationService {
       // 4. Geocode via Mapbox
       String? address;
       try {
-        address = await _getMapboxAddress(position!.latitude, position.longitude)
+        address = await _getMapboxAddress(position.latitude, position.longitude)
             .timeout(const Duration(seconds: 8), onTimeout: () => null);
       } catch (e) {
         debugPrint('Geocoding failed: $e');
       }
 
       _currentLocation = LocationInfo(
-        latitude: position!.latitude,
+        latitude: position.latitude,
         longitude: position.longitude,
         address: address,
         timestamp: DateTime.now(),
