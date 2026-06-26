@@ -8,33 +8,18 @@
 3. Create a new access token or use your default public token
 4. Copy the token (starts with `pk.`)
 
-### 2. Configure API Key in Your App
+### 2. Configure the API Key
 
-#### Option A: Using Config File (Recommended)
-Edit `lib/config/mapbox_config.dart`:
-```dart
-static const String accessToken = 'pk.your_actual_token_here';
-```
+Pass the public token as a Dart define. This keeps credentials out of source control and supplies the same token to Android and iOS:
 
-#### Option B: Using Android Manifest
-Edit `android/app/src/main/AndroidManifest.xml`:
-```xml
-<meta-data
-    android:name="com.mapbox.token"
-    android:value="pk.your_actual_token_here" />
-```
-
-#### Option C: Using iOS Info.plist
-Edit `ios/Runner/Info.plist`:
-```xml
-<key>MGLMapboxAccessToken</key>
-<string>pk.your_actual_token_here</string>
+```bash
+flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.your_actual_token_here
 ```
 
 ### 3. Run the App
 ```bash
 flutter pub get
-flutter run
+flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.your_actual_token_here
 ```
 
 ## 🛠️ Features Implemented
@@ -46,6 +31,10 @@ flutter run
 - **Multiple Map Styles** (Street, Satellite, Dark, Light)
 - **Zoom Controls** with smooth animations
 - **Marker Placement** at current location
+- **Destination Search** using Mapbox forward geocoding
+- **Driving Routes** with endpoint markers and a route polyline
+- **Route Summaries** with total distance and estimated travel time
+- **Automatic Camera Fitting** to keep the entire route visible
 
 ### ✅ Beautiful UI/UX
 - **Location Overlay** (Top Left): Shows coordinates, address, timestamp

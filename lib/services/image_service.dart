@@ -9,7 +9,8 @@ import 'package:intl/intl.dart';
 import '../services/location_service.dart';
 
 class ImageService {
-  static final ScreenshotController _screenshotController = ScreenshotController();
+  static final ScreenshotController _screenshotController =
+      ScreenshotController();
 
   static ScreenshotController get screenshotController => _screenshotController;
 
@@ -20,15 +21,11 @@ class ImageService {
   ) async {
     try {
       // 1. Capture the overlay as an image
-      Uint8List? overlayBytes = await _screenshotController.captureFromWidget(
+      Uint8List overlayBytes = await _screenshotController.captureFromWidget(
         _buildOverlayWidget(locationInfo),
         context: null,
         pixelRatio: 2.0,
       );
-
-      if (overlayBytes == null) {
-        throw Exception('Failed to capture overlay');
-      }
 
       // 2. Load the original image
       File originalFile = File(originalImagePath);
@@ -50,7 +47,8 @@ class ImageService {
       }
 
       // 4. Resize overlay to match original image width
-      int overlayHeight = (originalImage.height * 0.25).round(); // 25% of image height
+      int overlayHeight = (originalImage.height * 0.25)
+          .round(); // 25% of image height
       img.Image resizedOverlay = img.copyResize(
         overlayImage,
         width: originalImage.width,
@@ -59,11 +57,14 @@ class ImageService {
       );
 
       // 5. Create a composite image
-      img.Image compositeImage = img.Image(width: originalImage.width, height: originalImage.height);
-      
+      img.Image compositeImage = img.Image(
+        width: originalImage.width,
+        height: originalImage.height,
+      );
+
       // Copy original image
       img.compositeImage(compositeImage, originalImage);
-      
+
       // Add overlay at the bottom
       img.compositeImage(
         compositeImage,
@@ -76,7 +77,7 @@ class ImageService {
       String fileName = 'geotag_${DateTime.now().millisecondsSinceEpoch}.jpg';
       Directory? directory = await getTemporaryDirectory();
       String tempPath = '${directory.path}/$fileName';
-      
+
       File tempFile = File(tempPath);
       await tempFile.writeAsBytes(img.encodeJpg(compositeImage, quality: 95));
 
@@ -99,7 +100,9 @@ class ImageService {
 
   static Future<void> shareImage(String imagePath) async {
     try {
-      await Share.shareXFiles([XFile(imagePath)], text: 'Photo captured with GeoTag Camera');
+      await Share.shareXFiles([
+        XFile(imagePath),
+      ], text: 'Photo captured with GeoTag Camera');
     } catch (e) {
       throw Exception('Failed to share image: $e');
     }
@@ -118,11 +121,7 @@ class ImageService {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.location_on,
-                  color: Colors.white,
-                  size: 16,
-                ),
+                Icon(Icons.location_on, color: Colors.white, size: 16),
                 SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -141,11 +140,7 @@ class ImageService {
             if (locationInfo.address != null)
               Row(
                 children: [
-                  Icon(
-                    Icons.place,
-                    color: Colors.white,
-                    size: 16,
-                  ),
+                  Icon(Icons.place, color: Colors.white, size: 16),
                   SizedBox(width: 4),
                   Expanded(
                     child: Text(
@@ -164,14 +159,12 @@ class ImageService {
             if (locationInfo.address != null) SizedBox(height: 4),
             Row(
               children: [
-                Icon(
-                  Icons.access_time,
-                  color: Colors.white,
-                  size: 16,
-                ),
+                Icon(Icons.access_time, color: Colors.white, size: 16),
                 SizedBox(width: 4),
                 Text(
-                  DateFormat('yyyy-MM-dd HH:mm:ss').format(locationInfo.timestamp),
+                  DateFormat(
+                    'yyyy-MM-dd HH:mm:ss',
+                  ).format(locationInfo.timestamp),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 10,
@@ -205,11 +198,7 @@ class ImageService {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.location_on,
-                      color: Colors.white,
-                      size: 16,
-                    ),
+                    Icon(Icons.location_on, color: Colors.white, size: 16),
                     SizedBox(width: 4),
                     Expanded(
                       child: Text(
@@ -228,11 +217,7 @@ class ImageService {
                 if (locationInfo.address != null)
                   Row(
                     children: [
-                      Icon(
-                        Icons.place,
-                        color: Colors.white,
-                        size: 16,
-                      ),
+                      Icon(Icons.place, color: Colors.white, size: 16),
                       SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -251,14 +236,12 @@ class ImageService {
                 if (locationInfo.address != null) SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(
-                      Icons.access_time,
-                      color: Colors.white,
-                      size: 16,
-                    ),
+                    Icon(Icons.access_time, color: Colors.white, size: 16),
                     SizedBox(width: 4),
                     Text(
-                      DateFormat('yyyy-MM-dd HH:mm:ss').format(locationInfo.timestamp),
+                      DateFormat(
+                        'yyyy-MM-dd HH:mm:ss',
+                      ).format(locationInfo.timestamp),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 10,
@@ -275,12 +258,11 @@ class ImageService {
         pixelRatio: 2.0,
       );
 
-      if (overlayBytes == null) return null;
-
       // Save to temporary file
       Directory? directory = await getTemporaryDirectory();
-      String tempPath = '${directory.path}/overlay_preview_${DateTime.now().millisecondsSinceEpoch}.png';
-      
+      String tempPath =
+          '${directory.path}/overlay_preview_${DateTime.now().millisecondsSinceEpoch}.png';
+
       File tempFile = File(tempPath);
       await tempFile.writeAsBytes(overlayBytes);
 
@@ -295,10 +277,11 @@ class ImageService {
     try {
       Directory? tempDir = await getTemporaryDirectory();
       List<FileSystemEntity> files = tempDir.listSync();
-      
+
       for (FileSystemEntity file in files) {
-        if (file is File && 
-            (file.path.contains('geotag_') || file.path.contains('overlay_preview_'))) {
+        if (file is File &&
+            (file.path.contains('geotag_') ||
+                file.path.contains('overlay_preview_'))) {
           try {
             await file.delete();
           } catch (e) {

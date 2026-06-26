@@ -49,16 +49,13 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<key>MGLMapboxAccessToken</key>
-	<string>YOUR_MAPBOX_ACCESS_TOKEN</string>
-	
 	<!-- Camera and Location Permissions -->
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to capture photos with geotag information.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs location access to add geotag information to your photos.</string>
+	<string>This app uses your location to geotag photos and create navigation routes from your current position.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>This app needs location access to add geotag information to your photos.</string>
+	<string>This app uses your location to geotag photos and create navigation routes from your current position.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>This app needs photo library access to save geotagged photos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
