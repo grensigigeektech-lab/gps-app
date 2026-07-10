@@ -38,15 +38,11 @@ class PermissionDialog extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: Colors.red.withValues(alpha: 0.1),
               ),
-              child: Icon(
-                Icons.security,
-                color: Colors.red,
-                size: 40.w,
-              ),
+              child: Icon(Icons.security, color: Colors.red, size: 40.w),
             ),
-            
+
             SizedBox(height: 16.h),
-            
+
             // Title
             Text(
               'Permissions Required',
@@ -56,9 +52,9 @@ class PermissionDialog extends StatelessWidget {
                 color: Colors.black,
               ),
             ),
-            
+
             SizedBox(height: 12.h),
-            
+
             // Description
             Text(
               'This app requires camera and location permissions to work properly. '
@@ -71,9 +67,9 @@ class PermissionDialog extends StatelessWidget {
                 height: 1.4,
               ),
             ),
-            
+
             SizedBox(height: 24.h),
-            
+
             // Buttons
             Column(
               children: [
@@ -108,9 +104,9 @@ class PermissionDialog extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 SizedBox(height: 12.h),
-                
+
                 // Retry button
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
@@ -141,17 +137,18 @@ class PermissionDialog extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 SizedBox(height: 12.h),
-                
+
                 // Cancel button
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   width: double.infinity,
                   child: TextButton(
                     onPressed: () async {
+                      final navigator = Navigator.of(context);
                       await Vibration.vibrate(duration: 50);
-                      Navigator.pop(context);
+                      navigator.pop();
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.grey,
