@@ -151,6 +151,7 @@ class PermissionDialog extends StatelessWidget {
                   child: TextButton(
                     onPressed: () async {
                       await Vibration.vibrate(duration: 50);
+                      if (!context.mounted) return;
                       Navigator.pop(context);
                     },
                     style: TextButton.styleFrom(

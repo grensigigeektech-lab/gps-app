@@ -138,10 +138,14 @@ class LocationService {
         debugPrint('Fresh position obtained: ${position.latitude}, ${position.longitude}');
       } catch (e) {
         debugPrint('Fresh position failed: $e');
-        if (position == null) {
+        final lastKnownIsStale = position != null &&
+            position.timestamp.isBefore(
+              DateTime.now().subtract(const Duration(minutes: 5)),
+            );
+        if (position == null || lastKnownIsStale) {
           return LocationResult.failure(
             LocationError.timeout,
-            'Could not determine location (Timeout). Check your GPS/network signal.',
+            'Could not get a current GPS fix. Move to an open area and retry.',
           );
         } else {
           debugPrint('Proceeding with last known position.');
@@ -151,14 +155,14 @@ class LocationService {
       // 4. Geocode via Mapbox
       String? address;
       try {
-        address = await _getMapboxAddress(position!.latitude, position.longitude)
+        address = await _getMapboxAddress(position.latitude, position.longitude)
             .timeout(const Duration(seconds: 8), onTimeout: () => null);
       } catch (e) {
         debugPrint('Geocoding failed: $e');
       }
 
       _currentLocation = LocationInfo(
-        latitude: position!.latitude,
+        latitude: position.latitude,
         longitude: position.longitude,
         address: address,
         timestamp: DateTime.now(),
@@ -167,7 +171,10 @@ class LocationService {
       return LocationResult.success(_currentLocation);
     } catch (e) {
       debugPrint('LocationService error: $e');
-      return LocationResult.failure(LocationError.unknown, 'Unexpected error: $e');
+      return LocationResult.failure(
+        LocationError.unknown,
+        'Could not access your location. Check Location Services and try again.',
+      );
     } finally {
       _isGettingLocation = false;
     }
@@ -190,7 +197,7 @@ class LocationService {
           'https://api.mapbox.com/geocoding/v5/mapbox.places/$longitude,$latitude.json'
           '?access_token=${MapboxConfig.accessToken}&limit=1&types=address,place,neighborhood,locality,region';
 
-      debugPrint('Fetching address from Mapbox: $url');
+      debugPrint('Fetching address from Mapbox');
       final response = await http.get(Uri.parse(url));
       
       if (response.statusCode == 200) {

@@ -20,15 +20,11 @@ class ImageService {
   ) async {
     try {
       // 1. Capture the overlay as an image
-      Uint8List? overlayBytes = await _screenshotController.captureFromWidget(
+      final overlayBytes = await _screenshotController.captureFromWidget(
         _buildOverlayWidget(locationInfo),
         context: null,
         pixelRatio: 2.0,
       );
-
-      if (overlayBytes == null) {
-        throw Exception('Failed to capture overlay');
-      }
 
       // 2. Load the original image
       File originalFile = File(originalImagePath);
@@ -74,7 +70,7 @@ class ImageService {
 
       // 6. Save the composite image
       String fileName = 'geotag_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      Directory? directory = await getTemporaryDirectory();
+      final directory = await getTemporaryDirectory();
       String tempPath = '${directory.path}/$fileName';
       
       File tempFile = File(tempPath);
@@ -192,7 +188,7 @@ class ImageService {
     double height,
   ) async {
     try {
-      Uint8List? overlayBytes = await _screenshotController.captureFromWidget(
+      final overlayBytes = await _screenshotController.captureFromWidget(
         Container(
           width: width,
           height: height * 0.25,
@@ -275,10 +271,8 @@ class ImageService {
         pixelRatio: 2.0,
       );
 
-      if (overlayBytes == null) return null;
-
       // Save to temporary file
-      Directory? directory = await getTemporaryDirectory();
+      final directory = await getTemporaryDirectory();
       String tempPath = '${directory.path}/overlay_preview_${DateTime.now().millisecondsSinceEpoch}.png';
       
       File tempFile = File(tempPath);
@@ -293,7 +287,7 @@ class ImageService {
 
   static Future<void> cleanupTempFiles() async {
     try {
-      Directory? tempDir = await getTemporaryDirectory();
+      final tempDir = await getTemporaryDirectory();
       List<FileSystemEntity> files = tempDir.listSync();
       
       for (FileSystemEntity file in files) {
