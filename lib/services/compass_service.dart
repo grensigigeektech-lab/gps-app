@@ -13,12 +13,12 @@ class CompassService {
       // Calculate heading from magnetometer data
       final x = event.x;
       final y = event.y;
-      
+
       // Calculate heading in degrees
       double heading = math.atan2(y, x) * (180 / math.pi);
       heading = (heading + 90) % 360; // Adjust for compass orientation
       if (heading < 0) heading += 360;
-      
+
       _currentHeading = heading;
     });
   }

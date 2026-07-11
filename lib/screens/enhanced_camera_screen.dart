@@ -22,17 +22,21 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
         body: Stack(
           children: [
             // Camera Preview
-            Obx(() => controller.isInitialized.value
-                ? CameraPreview(controller.cameraController!)
-                : Container(
-                    color: Colors.black,
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            Obx(
+              () => controller.isInitialized.value
+                  ? CameraPreview(controller.cameraController!)
+                  : Container(
+                      color: Colors.black,
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
                       ),
                     ),
-                  )),
-      
+            ),
+
             // Top Navigation Bar
             Positioned(
               top: 0,
@@ -56,7 +60,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                 ),
               ),
             ),
-      
+
             // Location Information Card
             Positioned(
               bottom: 160,
@@ -64,7 +68,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
               right: 16,
               child: Obx(() => _buildLocationInfoCard()),
             ),
-      
+
             // Bottom Tab Bar
             Positioned(
               bottom: 100,
@@ -72,7 +76,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
               right: 0,
               child: _buildBottomTabBar(),
             ),
-      
+
             // Bottom Navigation Icons
             Positioned(
               bottom: 20,
@@ -94,11 +98,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
       },
       child: Container(
         padding: const EdgeInsets.all(12),
-        child: Icon(
-          icon,
-          color: Colors.white,
-          size: 24,
-        ),
+        child: Icon(icon, color: Colors.white, size: 24),
       ),
     );
   }
@@ -138,7 +138,9 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                   ),
                   child: controller.isMapboxInitialized.value
                       ? MapWidget(
-                          key: ValueKey('map_${controller.latitude.value}_${controller.longitude.value}'),
+                          key: ValueKey(
+                            'map_${controller.latitude.value}_${controller.longitude.value}',
+                          ),
                           styleUri: MapboxConfig.streetStyle,
                           viewport: CameraViewportState(
                             center: Point(
@@ -164,7 +166,9 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                           ),
                           child: const Center(
                             child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -180,10 +184,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                       decoration: BoxDecoration(
                         color: Colors.red,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 3,
-                        ),
+                        border: Border.all(color: Colors.white, width: 3),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.red.withValues(alpha: 0.5),
@@ -293,11 +294,23 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                 // Data Points Grid
                 Row(
                   children: [
-                    _buildDataPoint('Speed', '${controller.speed.value} km/h', Icons.speed),
+                    _buildDataPoint(
+                      'Speed',
+                      '${controller.speed.value} km/h',
+                      Icons.speed,
+                    ),
                     const SizedBox(width: 16),
-                    _buildDataPoint('Humidity', '${controller.humidity.value}%', Icons.water_drop),
+                    _buildDataPoint(
+                      'Humidity',
+                      '${controller.humidity.value}%',
+                      Icons.water_drop,
+                    ),
                     const SizedBox(width: 16),
-                    _buildDataPoint('Altitude', '${controller.altitude.value}m', Icons.terrain),
+                    _buildDataPoint(
+                      'Altitude',
+                      '${controller.altitude.value}m',
+                      Icons.terrain,
+                    ),
                   ],
                 ),
               ],
@@ -318,18 +331,11 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
         ),
         child: Column(
           children: [
-            Icon(
-              icon,
-              color: Colors.blue.shade600,
-              size: 20,
-            ),
+            Icon(icon, color: Colors.blue.shade600, size: 20),
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 10,
-              ),
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 10),
             ),
             Text(
               value,
@@ -361,28 +367,30 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                 HapticFeedback.lightImpact();
                 controller.selectedTab.value = 'share';
               },
-              child: Obx(() => Container(
-                height: 40,
-                margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: controller.selectedTab.value == 'share'
-                      ? Colors.blue.shade600
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: Text(
-                    'QUICK SHARE',
-                    style: TextStyle(
-                      color: controller.selectedTab.value == 'share'
-                          ? Colors.white
-                          : Colors.grey.shade400,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+              child: Obx(
+                () => Container(
+                  height: 40,
+                  margin: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: controller.selectedTab.value == 'share'
+                        ? Colors.blue.shade600
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'QUICK SHARE',
+                      style: TextStyle(
+                        color: controller.selectedTab.value == 'share'
+                            ? Colors.white
+                            : Colors.grey.shade400,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
-              )),
+              ),
             ),
           ),
           Expanded(
@@ -391,28 +399,30 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                 HapticFeedback.lightImpact();
                 controller.selectedTab.value = 'photo';
               },
-              child: Obx(() => Container(
-                height: 40,
-                margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: controller.selectedTab.value == 'photo'
-                      ? Colors.blue.shade600
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: Text(
-                    'PHOTO',
-                    style: TextStyle(
-                      color: controller.selectedTab.value == 'photo'
-                          ? Colors.white
-                          : Colors.grey.shade400,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+              child: Obx(
+                () => Container(
+                  height: 40,
+                  margin: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: controller.selectedTab.value == 'photo'
+                        ? Colors.blue.shade600
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'PHOTO',
+                      style: TextStyle(
+                        color: controller.selectedTab.value == 'photo'
+                            ? Colors.white
+                            : Colors.grey.shade400,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
-              )),
+              ),
             ),
           ),
           Expanded(
@@ -421,28 +431,30 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                 HapticFeedback.lightImpact();
                 controller.selectedTab.value = 'video';
               },
-              child: Obx(() => Container(
-                height: 40,
-                margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: controller.selectedTab.value == 'video'
-                      ? Colors.blue.shade600
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: Text(
-                    'VIDEO',
-                    style: TextStyle(
-                      color: controller.selectedTab.value == 'video'
-                          ? Colors.white
-                          : Colors.grey.shade400,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+              child: Obx(
+                () => Container(
+                  height: 40,
+                  margin: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: controller.selectedTab.value == 'video'
+                        ? Colors.blue.shade600
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'VIDEO',
+                      style: TextStyle(
+                        color: controller.selectedTab.value == 'video'
+                            ? Colors.white
+                            : Colors.grey.shade400,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
-              )),
+              ),
             ),
           ),
         ],
@@ -486,19 +498,12 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
               color: Colors.grey.shade800,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: 20,
-            ),
+            child: Icon(icon, color: Colors.white, size: 20),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 10,
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 10),
           ),
         ],
       ),
@@ -517,10 +522,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white,
-          border: Border.all(
-            color: Colors.grey.shade300,
-            width: 3,
-          ),
+          border: Border.all(color: Colors.grey.shade300, width: 3),
           boxShadow: [
             BoxShadow(
               color: Colors.white.withValues(alpha: 0.3),
@@ -529,11 +531,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
             ),
           ],
         ),
-        child: const Icon(
-          Icons.camera_alt,
-          color: Colors.black,
-          size: 28,
-        ),
+        child: const Icon(Icons.camera_alt, color: Colors.black, size: 28),
       ),
     );
   }
@@ -639,7 +637,7 @@ class EnhancedCameraController extends GetxController {
   void _updateLocationFromMapbox(MapboxLocationInfo locationData) {
     latitude.value = locationData.latitude;
     longitude.value = locationData.longitude;
-    
+
     final addr = locationData.address;
     if (addr != null && addr.trim().isNotEmpty) {
       addressInfo.value = addr;
@@ -648,10 +646,13 @@ class EnhancedCameraController extends GetxController {
       addressInfo.value = 'No specific address found for this area';
       locationInfo.value = 'No specific address found for this area';
     }
-    
+
     // Generate mock plus code (in real app, use proper plus code library)
-    plusCode.value = _generatePlusCode(locationData.latitude, locationData.longitude);
-    
+    plusCode.value = _generatePlusCode(
+      locationData.latitude,
+      locationData.longitude,
+    );
+
     // Mock data (in real app, get from actual sensors)
     altitude.value = (math.Random().nextDouble() * 500 + 100).roundToDouble();
     speed.value = (math.Random().nextDouble() * 10).roundToDouble();
@@ -685,12 +686,15 @@ class EnhancedCameraController extends GetxController {
   void _updateDateTime() {
     final now = DateTime.now();
     dateInfo.value = '${now.day}/${now.month}/${now.year}';
-    timeInfo.value = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    
+    timeInfo.value =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
     // Update every minute
     _dateTimeTimer?.cancel();
-    _dateTimeTimer =
-        Timer.periodic(const Duration(minutes: 1), (_) => _updateDateTime());
+    _dateTimeTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _updateDateTime(),
+    );
   }
 
   Future<void> capturePhoto() async {
@@ -715,18 +719,10 @@ class MapGridPainter extends CustomPainter {
 
     const gridSize = 20.0;
     for (double x = 0; x <= size.width; x += gridSize) {
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, size.height),
-        paint,
-      );
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
     for (double y = 0; y <= size.height; y += gridSize) {
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(size.width, y),
-        paint,
-      );
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
   }
 

@@ -62,7 +62,9 @@ class MapboxLocationService {
     }
   }
 
-  static Future<MapboxLocationInfo?> getCurrentLocation({bool forceRefresh = false}) async {
+  static Future<MapboxLocationInfo?> getCurrentLocation({
+    bool forceRefresh = false,
+  }) async {
     if (_isGettingLocation && !forceRefresh) {
       return _currentLocation;
     }
@@ -73,7 +75,9 @@ class MapboxLocationService {
       // Check if location service is enabled
       bool serviceEnabled = await isLocationServiceEnabled();
       if (!serviceEnabled) {
-        throw Exception('Location services are disabled. Please enable them in settings.');
+        throw Exception(
+          'Location services are disabled. Please enable them in settings.',
+        );
       }
 
       // Check location permissions
@@ -119,14 +123,14 @@ class MapboxLocationService {
           debugPrint('Using fallback location');
         }
       }
-      
+
       // Get address from coordinates using Mapbox geocoding
       String? address;
       try {
-        address = await _getMapboxAddress(position.latitude, position.longitude).timeout(
-          const Duration(seconds: 10),
-          onTimeout: () => null,
-        );
+        address = await _getMapboxAddress(
+          position.latitude,
+          position.longitude,
+        ).timeout(const Duration(seconds: 10), onTimeout: () => null);
       } catch (e) {
         debugPrint('Geocoding timeout, using null address: $e');
       }
@@ -148,19 +152,23 @@ class MapboxLocationService {
     }
   }
 
-  static Future<String?> _getMapboxAddress(double latitude, double longitude) async {
+  static Future<String?> _getMapboxAddress(
+    double latitude,
+    double longitude,
+  ) async {
     try {
       // Expanded types to include neighborhood, locality, and region for better coverage
-      final url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/$longitude,$latitude.json'
+      final url =
+          'https://api.mapbox.com/geocoding/v5/mapbox.places/$longitude,$latitude.json'
           '?access_token=${MapboxConfig.accessToken}&limit=1&types=address,place,neighborhood,locality,region';
-      
+
       debugPrint('MapboxLocationService: Fetching address');
       final response = await http.get(Uri.parse(url));
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final features = data['features'] as List;
-        
+
         if (features.isNotEmpty) {
           final placeName = features.first['place_name'] as String?;
           if (placeName != null && placeName.trim().isNotEmpty) {
@@ -170,7 +178,9 @@ class MapboxLocationService {
         }
         debugPrint('MapboxLocationService: No address features found.');
       } else {
-        debugPrint('MapboxLocationService geocoding failed: ${response.statusCode}');
+        debugPrint(
+          'MapboxLocationService geocoding failed: ${response.statusCode}',
+        );
       }
     } catch (e) {
       debugPrint('MapboxLocationService geocoding error: $e');
@@ -178,7 +188,9 @@ class MapboxLocationService {
     return null;
   }
 
-  static Future<void> startLocationUpdates(Function(MapboxLocationInfo) onLocationChanged) async {
+  static Future<void> startLocationUpdates(
+    Function(MapboxLocationInfo) onLocationChanged,
+  ) async {
     debugPrint('Location updates not implemented with current SDK version');
     // Note: Real-time location updates would require additional implementation
     // with geolocator's position streams
