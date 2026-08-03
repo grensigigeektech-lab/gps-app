@@ -10,31 +10,18 @@
 
 ### 2. Configure API Key in Your App
 
-#### Option A: Using Config File (Recommended)
-Edit `lib/config/mapbox_config.dart`:
-```dart
-static const String accessToken = 'pk.your_actual_token_here';
+#### Option A: Build-time configuration (Recommended)
+Keep the token out of tracked source and provide it as a Dart define:
+```bash
+flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.your_actual_token_here
 ```
 
-#### Option B: Using Android Manifest
-Edit `android/app/src/main/AndroidManifest.xml`:
-```xml
-<meta-data
-    android:name="com.mapbox.token"
-    android:value="pk.your_actual_token_here" />
-```
-
-#### Option C: Using iOS Info.plist
-Edit `ios/Runner/Info.plist`:
-```xml
-<key>MGLMapboxAccessToken</key>
-<string>pk.your_actual_token_here</string>
-```
+Apply the same `--dart-define` to release build commands and CI jobs.
 
 ### 3. Run the App
 ```bash
 flutter pub get
-flutter run
+flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.your_actual_token_here
 ```
 
 ## 🛠️ Features Implemented
