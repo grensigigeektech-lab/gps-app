@@ -10,10 +10,10 @@ class CameraService {
     try {
       // Request camera permission
       await Permission.camera.request();
-      
+
       // Get available cameras
       _cameras = await availableCameras();
-      
+
       if (_cameras.isEmpty) {
         throw Exception('No cameras available');
       }
@@ -89,10 +89,10 @@ class CameraService {
 
   static String getCameraDescription() {
     if (_cameras.isEmpty) return 'No Camera';
-    
+
     final camera = _cameras[_currentCameraIndex];
     final lensDirection = camera.lensDirection;
-    
+
     if (lensDirection == CameraLensDirection.back) {
       return 'Back Camera';
     } else if (lensDirection == CameraLensDirection.front) {

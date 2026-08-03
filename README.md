@@ -9,11 +9,12 @@ A Flutter application that captures photos with automatic geotag information ove
 - **Image Overlay**: Adds geotag information (coordinates, address, timestamp) as overlay on captured images
 - **Save & Share**: Save processed images to device gallery and share with other apps
 - **Permission Handling**: Graceful permission requests for camera, location, and storage
+- **Map Navigation**: Destination search, driving-route polyline, automatic route framing, distance, and ETA
 - **Material 3 UI**: Clean, modern interface following Material Design 3 guidelines
 
 ## Requirements
 
-- Flutter SDK (>= 3.11.0)
+- Flutter SDK (>= 3.10.0)
 - Android: API level 21+ (Android 5.0)
 - iOS: iOS 11.0+
 
@@ -30,10 +31,14 @@ cd geotag_camera
 flutter pub get
 ```
 
-3. Run the app:
+3. Run the app with a public Mapbox access token:
 ```bash
-flutter run
+flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.your_public_token
 ```
+
+The navigation feature uses the existing `mapbox_maps_flutter` integration.
+Mapbox forward geocoding resolves the destination and Mapbox Directions returns
+the driving route, distance, and estimated travel time.
 
 ## Permissions
 
@@ -79,13 +84,24 @@ lib/
 4. **Preview**: Review the captured image with geotag overlay
 5. **Save/Share**: Save to gallery or share with other apps
 
+### Map navigation
+
+1. Tap the location icon in the top bar or **Map Data** in the bottom bar.
+2. Grant location access and enable the device Location Service if prompted.
+3. Enter an address or place name and tap the directions button.
+4. The map shows the current location, destination, full driving route,
+   distance, and estimated travel time.
+
+The navigation screen provides retry or settings actions for denied location
+access, disabled GPS, network failures, destinations that cannot be resolved,
+and destinations for which no driving route is available.
+
 ## Key Dependencies
 
-- `camera: ^1.3.0` - Camera functionality
+- `camera: ^0.12.0+1` - Camera functionality
 - `geolocator: ^10.1.0` - GPS location services
-- `geocoding: ^3.0.0` - Address geocoding
+- `geocoding: ^2.1.1` - Address geocoding
 - `screenshot: ^3.0.0` - Widget to image conversion
-- `gallery_saver: ^2.3.3` - Save images to gallery
 - `share_plus: ^9.0.0` - Share functionality
 - `permission_handler: ^11.3.1` - Permission management
 - `flutter_screenutil: ^5.9.3` - Responsive design
