@@ -11,18 +11,23 @@ import 'helpers/navigation_fakes.dart' show FakeDirections, locationResult;
 
 void main() {
   late MapNavigationController controller;
-  setUp(() {
-    Get.testMode = true;
-    controller = MapNavigationController(
-      directions: FakeDirections(),
-      locate: () async => locationResult(),
-      mapsConfigured: true,
-      autoLocate: false,
-    );
-  });
+  setUp(() => Get.testMode = true);
   tearDown(Get.reset);
 
-  Future<void> mount(WidgetTester tester, {double scale = 1}) async {
+  Future<void> mount(
+    WidgetTester tester, {
+    double scale = 1,
+    MapNavigationController? instance,
+  }) async {
+    // Create Futures inside the widget test's FakeAsync zone, not in setUp.
+    controller =
+        instance ??
+        MapNavigationController(
+          directions: FakeDirections(),
+          locate: () async => locationResult(),
+          mapsConfigured: true,
+          autoLocate: false,
+        );
     Get.put(controller);
     await tester.pumpWidget(
       GetMaterialApp(
@@ -39,62 +44,78 @@ void main() {
     );
   }
 
-  testWidgets('destination form shows validation and route summary', (
-    tester,
-  ) async {
-    await mount(tester);
-    await tester.tap(find.text('Find driving route'));
-    await tester.pumpAndSettle();
-    expect(find.text('Enter a destination address or place.'), findsOneWidget);
-    await tester.enterText(find.byType(TextField), 'Surat');
-    await tester.tap(find.text('Find driving route'));
-    await tester.pumpAndSettle();
-    expect(find.text('1.5 km · 10 min estimated driving time'), findsOneWidget);
-    expect(find.text('Show entire route'), findsOneWidget);
-    expect(find.text('Your location'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'destination form shows validation and route summary',
+    (tester) async {
+      await mount(tester);
+      await tester.tap(find.text('Find driving route'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Enter a destination address or place.'),
+        findsOneWidget,
+      );
+      await tester.enterText(find.byType(TextField), 'Surat');
+      await tester.tap(find.text('Find driving route'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('1.5 km · 10 min estimated driving time'),
+        findsOneWidget,
+      );
+      expect(find.text('Show entire route'), findsOneWidget);
+      expect(find.text('Your location'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      Get.reset();
+    },
+    timeout: const Timeout(Duration(seconds: 30)),
+  );
 
-  testWidgets('shows a progress state and disables repeated submissions', (
-    tester,
-  ) async {
-    controller.onClose();
-    final pending = Completer<LocationResult>();
-    controller = MapNavigationController(
-      directions: FakeDirections(),
-      locate: () => pending.future,
-      mapsConfigured: true,
-      autoLocate: false,
-    );
-    await mount(tester);
-    await tester.enterText(find.byType(TextField), 'Surat');
-    await tester.tap(find.text('Find driving route'));
-    await tester.pump();
-    expect(find.byType(LinearProgressIndicator), findsOneWidget);
-    expect(
-      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
-      isNull,
-    );
-    pending.complete(
-      LocationResult.failure(
-        LocationError.permissionPermanentlyDenied,
-        'Allow location in settings',
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Open settings'), findsOneWidget);
-    expect(find.text('Retry'), findsOneWidget);
-  });
+  testWidgets(
+    'shows a progress state and disables repeated submissions',
+    (tester) async {
+      final pending = Completer<LocationResult>();
+      final delayedController = MapNavigationController(
+        directions: FakeDirections(),
+        locate: () => pending.future,
+        mapsConfigured: true,
+        autoLocate: false,
+      );
+      await mount(tester, instance: delayedController);
+      await tester.enterText(find.byType(TextField), 'Surat');
+      await tester.tap(find.text('Find driving route'));
+      await tester.pump();
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+      expect(
+        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        isNull,
+      );
+      pending.complete(
+        LocationResult.failure(
+          LocationError.permissionPermanentlyDenied,
+          'Allow location in settings',
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Open settings'), findsOneWidget);
+      expect(find.text('Retry'), findsOneWidget);
+      Get.reset();
+    },
+    timeout: const Timeout(Duration(seconds: 30)),
+  );
 
-  testWidgets('compact screen and large text do not overflow', (tester) async {
-    tester.view.physicalSize = const Size(320, 568);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    await mount(tester, scale: 2);
-    controller.destinationInput.text = 'Surat';
-    await controller.search();
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'compact screen and large text do not overflow',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await mount(tester, scale: 2);
+      controller.destinationInput.text = 'Surat';
+      await controller.search();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      Get.reset();
+    },
+    timeout: const Timeout(Duration(seconds: 30)),
+  );
 }
