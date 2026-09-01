@@ -4,6 +4,10 @@ import 'package:geotag_camera/services/mapbox_directions_service.dart';
 import 'package:geotag_camera/services/mapbox_service.dart';
 
 class RecordingMap extends Fake implements MapboxMap {
+  final recordingAnnotations = RecordingAnnotations();
+  @override
+  AnnotationManager get annotations => recordingAnnotations;
+
   List<Point>? fittedPoints;
   CameraOptions? appliedCamera;
   MbxEdgeInsets? padding;
@@ -31,7 +35,92 @@ class RecordingMap extends Fake implements MapboxMap {
   }
 }
 
+class RecordingAnnotations extends Fake implements AnnotationManager {
+  final lines = RecordingLines();
+  final circles = RecordingCircles();
+  final creationOrder = <String>[];
+  @override
+  Future<PolylineAnnotationManager> createPolylineAnnotationManager({
+    String? id,
+    String? below,
+  }) async {
+    creationOrder.add('line');
+    return lines;
+  }
+
+  @override
+  Future<CircleAnnotationManager> createCircleAnnotationManager({
+    String? id,
+    String? below,
+  }) async {
+    creationOrder.add('circle');
+    return circles;
+  }
+}
+
+class RecordingLines extends Fake implements PolylineAnnotationManager {
+  final drawn = <PolylineAnnotationOptions>[];
+  @override
+  Future<void> deleteAll() async => drawn.clear();
+  @override
+  Future<PolylineAnnotation> create(PolylineAnnotationOptions options) async {
+    drawn.add(options);
+    return FakeLine();
+  }
+}
+
+class FakeLine extends Fake implements PolylineAnnotation {}
+
+class RecordingCircles extends Fake implements CircleAnnotationManager {
+  final drawn = <CircleAnnotationOptions>[];
+  @override
+  Future<void> deleteAll() async => drawn.clear();
+  @override
+  Future<CircleAnnotation> create(CircleAnnotationOptions options) async {
+    drawn.add(options);
+    return FakeCircle();
+  }
+}
+
+class FakeCircle extends Fake implements CircleAnnotation {}
+
 void main() {
+  test(
+    'draws the road polyline below distinct endpoints and replaces stale overlays',
+    () async {
+      final native = RecordingMap();
+      final map = MapboxService()..setMapController(native);
+      await map.initializeNavigationAnnotations();
+      await map.showNavigation(
+        origin: const RouteCoordinate(21, 72),
+        destination: const NavigationDestination(
+          name: 'End',
+          coordinate: RouteCoordinate(22, 73),
+        ),
+        route: NavigationRoute(
+          coordinates: const [
+            RouteCoordinate(21, 72),
+            RouteCoordinate(24, 71),
+            RouteCoordinate(22, 73),
+          ],
+          distanceMeters: 1000,
+          durationSeconds: 600,
+        ),
+      );
+      final annotations = native.recordingAnnotations;
+      expect(annotations.creationOrder, ['line', 'circle']);
+      expect(annotations.lines.drawn.single.geometry.coordinates.length, 3);
+      expect(annotations.circles.drawn.map((p) => p.circleColor), [
+        0xFF1976D2,
+        0xFFE65100,
+      ]);
+      expect(annotations.circles.drawn.last.geometry.coordinates.lng, 73);
+      await map.showNavigation(origin: const RouteCoordinate(21, 72));
+      expect(annotations.lines.drawn, isEmpty);
+      expect(annotations.circles.drawn.length, 1);
+    },
+  );
+
   test('fits full route geometry including detours and endpoints', () async {
     final native = RecordingMap();
     final map = MapboxService()..setMapController(native);

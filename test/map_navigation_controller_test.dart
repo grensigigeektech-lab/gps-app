@@ -30,6 +30,23 @@ void main() {
     expect(controller.destination.value?.name, 'Destination');
     expect(controller.errorText.value, isEmpty);
   });
+  test('disposal ignores a late network completion', () async {
+    final delayedApi = FakeDirections()..pending = Completer<NavigationRoute>();
+    final closing = MapNavigationController(
+      directions: delayedApi,
+      locate: () async => locationResult(),
+      mapsConfigured: true,
+      autoLocate: false,
+    );
+    closing.destinationInput.text = 'Surat';
+    final pending = closing.search();
+    await Future<void>.delayed(Duration.zero);
+    closing.onClose();
+    delayedApi.pending!.complete(FakeDirections.path);
+    await pending;
+    expect(closing.route.value, isNull);
+  });
+
   test('invalid input does not access GPS or API', () async {
     await controller.search();
     expect(api.searches, 0);

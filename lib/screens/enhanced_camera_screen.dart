@@ -139,7 +139,7 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
                             'map_${controller.latitude.value}_${controller.longitude.value}',
                           ),
                           styleUri: MapboxConfig.streetStyle,
-                          cameraOptions: CameraOptions(
+                          viewport: CameraViewportState(
                             center: Point(
                               coordinates: Position(
                                 controller.longitude.value,
@@ -534,6 +534,9 @@ class EnhancedCameraScreen extends GetView<EnhancedCameraController> {
 }
 
 class EnhancedCameraController extends GetxController {
+  EnhancedCameraController({this.autoInitialize = true});
+
+  final bool autoInitialize;
   final MapboxService mapService = MapboxService();
   Timer? _clockTimer;
   // Camera
@@ -563,6 +566,7 @@ class EnhancedCameraController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    if (!autoInitialize) return;
     _initializeMapbox();
     _initializeCamera();
     _initializeLocation();

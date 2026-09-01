@@ -58,8 +58,9 @@ class MapNavigationScreen extends GetView<MapNavigationController> {
                           ),
                         ),
                         Obx(() {
-                          if (!controller.isBusy)
+                          if (!controller.isBusy) {
                             return const SizedBox.shrink();
+                          }
                           return Semantics(
                             liveRegion: true,
                             child: Column(
@@ -251,7 +252,7 @@ class MapNavigationScreen extends GetView<MapNavigationController> {
           MapWidget(
             key: ValueKey('navigation-map-$revision'),
             styleUri: MapboxConfig.streetStyle,
-            cameraOptions: CameraOptions(zoom: 2),
+            viewport: const CameraViewportState(zoom: 2),
             onMapCreated: (map) => controller.onMapCreated(map, revision),
             onStyleLoadedListener: (_) => controller.onStyleLoaded(revision),
             onMapLoadErrorListener: (_) => controller.onMapError(revision),

@@ -332,8 +332,9 @@ class MapNavigationController extends GetxController
         await _map.showNavigation(origin: start, destination: end, route: path);
         if (_closed ||
             render != _renderRequest ||
-            revision != mapRevision.value)
+            revision != mapRevision.value) {
           return;
+        }
         if (fit && start != null) {
           await _map.fitNavigation(
             origin: start,

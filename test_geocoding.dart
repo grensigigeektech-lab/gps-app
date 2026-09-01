@@ -31,8 +31,9 @@ void main() async {
       if (place.street?.isNotEmpty == true) parts.add(place.street!);
       if (place.subLocality?.isNotEmpty == true) parts.add(place.subLocality!);
       if (place.locality?.isNotEmpty == true) parts.add(place.locality!);
-      if (place.administrativeArea?.isNotEmpty == true)
+      if (place.administrativeArea?.isNotEmpty == true) {
         parts.add(place.administrativeArea!);
+      }
       if (place.postalCode?.isNotEmpty == true) parts.add(place.postalCode!);
       if (place.country?.isNotEmpty == true) parts.add(place.country!);
 

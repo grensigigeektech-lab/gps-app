@@ -20,9 +20,7 @@ void main() {
       autoLocate: false,
     );
   });
-  tearDown(() async {
-    await Get.reset();
-  });
+  tearDown(Get.reset);
 
   Future<void> mount(WidgetTester tester, {double scale = 1}) async {
     Get.put(controller);

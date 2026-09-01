@@ -29,8 +29,9 @@ void main() {
             case 'requestPermission':
               return requestedPermission.index;
             case 'getCurrentPosition':
-              if (failPosition)
+              if (failPosition) {
                 throw PlatformException(code: 'POSITION_UNAVAILABLE');
+              }
               return {
                 'latitude': 21.1,
                 'longitude': 72.2,

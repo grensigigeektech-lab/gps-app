@@ -6,17 +6,14 @@ import 'package:geotag_camera/routes/app_routes.dart';
 import 'package:geotag_camera/screens/enhanced_camera_screen.dart';
 import 'package:geotag_camera/screens/map_navigation_controller.dart';
 
-class TestCameraController extends EnhancedCameraController {
-  @override
-  void onInit() {} // No camera hardware or background timers in the smoke test.
-}
-
 void main() {
   testWidgets('camera screen keeps its entry point and opens map navigation', (
     tester,
   ) async {
     Get.testMode = true;
-    Get.put<EnhancedCameraController>(TestCameraController());
+    Get.put<EnhancedCameraController>(
+      EnhancedCameraController(autoInitialize: false),
+    );
     Get.put<MapNavigationController>(
       MapNavigationController(autoLocate: false, mapsConfigured: false),
     );

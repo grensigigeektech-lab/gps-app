@@ -145,8 +145,9 @@ class MapboxDirectionsService {
           throw const FormatException();
         }
         final label = properties['full_address'] ?? properties['name'];
-        if (label is! String || label.trim().isEmpty)
+        if (label is! String || label.trim().isEmpty) {
           throw const FormatException();
+        }
         destinations.add(
           NavigationDestination(
             name: label.trim(),
@@ -180,8 +181,9 @@ class MapboxDirectionsService {
         'steps': 'false',
       },
     );
-    if (data['code'] == 'NoRoute' || data['code'] == 'NoSegment')
+    if (data['code'] == 'NoRoute' || data['code'] == 'NoSegment') {
       throw _noRoute;
+    }
     if (data['code'] != 'Ok') throw _invalidResponse;
     try {
       final routes = data['routes'];
