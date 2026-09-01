@@ -296,7 +296,7 @@ class _Legend extends StatelessWidget {
     children: [
       Icon(Icons.circle, color: color, size: 12),
       const SizedBox(width: 6),
-      Text(label),
+      Flexible(child: Text(label)),
     ],
   );
 }

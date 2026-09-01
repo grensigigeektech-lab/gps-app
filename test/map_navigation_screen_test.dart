@@ -12,7 +12,10 @@ import 'helpers/navigation_fakes.dart' show FakeDirections, locationResult;
 void main() {
   late MapNavigationController controller;
   setUp(() => Get.testMode = true);
-  tearDown(Get.reset);
+  tearDown(() async {
+    await Get.deleteAll(force: true);
+    Get.reset();
+  });
 
   Future<void> mount(
     WidgetTester tester, {
@@ -64,6 +67,7 @@ void main() {
       expect(find.text('Show entire route'), findsOneWidget);
       expect(find.text('Your location'), findsOneWidget);
       expect(tester.takeException(), isNull);
+      await Get.deleteAll(force: true);
       Get.reset();
     },
     timeout: const Timeout(Duration(seconds: 30)),
@@ -97,6 +101,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Open settings'), findsOneWidget);
       expect(find.text('Retry'), findsOneWidget);
+      await Get.deleteAll(force: true);
       Get.reset();
     },
     timeout: const Timeout(Duration(seconds: 30)),
@@ -113,7 +118,9 @@ void main() {
       controller.destinationInput.text = 'Surat';
       await controller.search();
       await tester.pumpAndSettle();
+      expect(controller.route.value, isNotNull);
       expect(tester.takeException(), isNull);
+      await Get.deleteAll(force: true);
       Get.reset();
     },
     timeout: const Timeout(Duration(seconds: 30)),

@@ -17,7 +17,10 @@ void main() {
     Get.put<MapNavigationController>(
       MapNavigationController(autoLocate: false, mapsConfigured: false),
     );
-    addTearDown(Get.reset);
+    addTearDown(() async {
+      await Get.deleteAll(force: true);
+      Get.reset();
+    });
     await tester.pumpWidget(const GeoTagCameraApp());
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
@@ -29,5 +32,6 @@ void main() {
     expect(Get.currentRoute, AppRoutes.mapNavigation);
     expect(find.text('Map navigation'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
+    await Get.deleteAll(force: true);
   });
 }
