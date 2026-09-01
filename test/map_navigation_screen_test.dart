@@ -7,7 +7,7 @@ import 'package:geotag_camera/screens/map_navigation_controller.dart';
 import 'package:geotag_camera/screens/map_navigation_screen.dart';
 import 'package:geotag_camera/services/location_service.dart';
 
-import 'helpers/navigation_fakes.dart' show FakeDirections, locationResult;
+import 'helpers/navigation_fakes.dart';
 
 void main() {
   late MapNavigationController controller;
