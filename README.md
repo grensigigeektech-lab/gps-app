@@ -4,6 +4,8 @@ A Flutter application that captures photos with automatic geotag information ove
 
 ## Features
 
+- **Map navigation**: Open **Map Data** for fresh GPS, destination search/selection, a driving route with origin/destination markers, full-route camera fitting, distance and estimated time. Includes loading, retry and settings recovery. See [Mapbox setup and verification](MAPBOX_SETUP.md).
+
 - **Camera Integration**: Live camera preview with high-quality image capture
 - **Location Services**: Automatic GPS location fetching and address geocoding
 - **Image Overlay**: Adds geotag information (coordinates, address, timestamp) as overlay on captured images
@@ -13,9 +15,9 @@ A Flutter application that captures photos with automatic geotag information ove
 
 ## Requirements
 
-- Flutter SDK (>= 3.11.0)
-- Android: API level 21+ (Android 5.0)
-- iOS: iOS 11.0+
+- Flutter 3.41.1 / Dart 3.11.0 or compatible newer SDK
+- Android: API level 24+ (Android 7.0; Flutter 3.41 default)
+- iOS: iOS 14.0+ (required by the existing Mapbox SDK)
 
 ## Installation
 
@@ -32,7 +34,7 @@ flutter pub get
 
 3. Run the app:
 ```bash
-flutter run
+flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.YOUR_PUBLIC_TOKEN
 ```
 
 ## Permissions
@@ -57,18 +59,25 @@ The app requires the following permissions:
 
 ```
 lib/
-├── main.dart                 # App entry point
+├── main.dart
+├── config/mapbox_config.dart
+├── routes/app_routes.dart
 ├── screens/
-│   ├── camera_screen.dart    # Camera preview and capture
-│   └── preview_screen.dart   # Image preview with overlay
+│   ├── enhanced_camera_screen.dart
+│   ├── enhanced_camera_binding.dart
+│   ├── map_navigation_screen.dart
+│   ├── map_navigation_controller.dart
+│   └── map_navigation_binding.dart
 ├── services/
-│   ├── camera_service.dart   # Camera operations
-│   ├── location_service.dart # GPS and geocoding
-│   └── image_service.dart    # Image processing and overlay
-├── widgets/
-│   └── permission_dialog.dart # Permission request dialog
+│   ├── location_service.dart
+│   ├── mapbox_location_service.dart
+│   ├── mapbox_directions_service.dart
+│   ├── mapbox_service.dart
+│   ├── camera_service.dart
+│   ├── image_service.dart
+│   └── compass_service.dart
+├── widgets/permission_dialog.dart
 └── utils/
-    └── app_error.dart        # Error handling utilities
 ```
 
 ## Usage
@@ -81,14 +90,18 @@ lib/
 
 ## Key Dependencies
 
-- `camera: ^1.3.0` - Camera functionality
-- `geolocator: ^10.1.0` - GPS location services
-- `geocoding: ^3.0.0` - Address geocoding
-- `screenshot: ^3.0.0` - Widget to image conversion
-- `gallery_saver: ^2.3.3` - Save images to gallery
-- `share_plus: ^9.0.0` - Share functionality
-- `permission_handler: ^11.3.1` - Permission management
-- `flutter_screenutil: ^5.9.3` - Responsive design
+See `pubspec.yaml` and the committed `pubspec.lock` for exact constraints/versions.
+
+- `mapbox_maps_flutter` — existing native Mapbox map SDK
+- `http` — Mapbox geocoding and directions requests
+- `get` — existing GetX routes, bindings and reactive state
+- `geolocator` / `permission_handler` — GPS and permissions
+- `camera` — camera preview and photo capture
+- `screenshot`, `image`, `path_provider`, `share_plus` — image processing/sharing
+- `flutter_screenutil` — responsive UI support
+
+Navigation adds no new Dart dependencies. See [MAPBOX_SETUP.md](MAPBOX_SETUP.md)
+for build-time token configuration, automated checks and the device smoke checklist.
 
 ## Error Handling
 
