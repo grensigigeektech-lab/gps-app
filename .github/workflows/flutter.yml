@@ -1,0 +1,23 @@
+name: Flutter checks
+on:
+  pull_request:
+  push:
+    branches: [main, feature/map-navigation]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.1'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test test_geocoding.dart
+      - run: flutter analyze --fatal-infos
+        if: success() || failure()
+      - run: flutter test
+        if: success() || failure()

@@ -1,148 +1,95 @@
-# Mapbox Integration Setup Guide
+# Mapbox setup and navigation verification
 
-## 🚀 Quick Setup
+## Configuration
 
-### 1. Get Your Mapbox API Key
-1. Go to [Mapbox Account](https://account.mapbox.com/access-tokens/)
-2. Sign up or log in
-3. Create a new access token or use your default public token
-4. Copy the token (starts with `pk.`)
+Use the existing Mapbox Maps Flutter SDK (`mapbox_maps_flutter`, locked at 2.23.0).
+The application reads its public token at build time:
 
-### 2. Configure API Key in Your App
-
-#### Option A: Using Config File (Recommended)
-Edit `lib/config/mapbox_config.dart`:
-```dart
-static const String accessToken = 'pk.your_actual_token_here';
-```
-
-#### Option B: Using Android Manifest
-Edit `android/app/src/main/AndroidManifest.xml`:
-```xml
-<meta-data
-    android:name="com.mapbox.token"
-    android:value="pk.your_actual_token_here" />
-```
-
-#### Option C: Using iOS Info.plist
-Edit `ios/Runner/Info.plist`:
-```xml
-<key>MGLMapboxAccessToken</key>
-<string>pk.your_actual_token_here</string>
-```
-
-### 3. Run the App
-```bash
+```sh
 flutter pub get
-flutter run
+flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.YOUR_PUBLIC_TOKEN
+flutter build apk --dart-define=MAPBOX_ACCESS_TOKEN=pk.YOUR_PUBLIC_TOKEN
 ```
 
-## 🛠️ Features Implemented
+Use a public token enabled for the Maps SDK, Geocoding API and Directions API.
+Do not embed a secret (`sk.`) token in Dart, Android resources, or Info.plist.
+The public client token is included in the compiled application; configure
+appropriate account restrictions and usage monitoring. A missing or rejected
+public token produces an actionable error, not an endless loading indicator.
 
-### ✅ Core Map Functionality
-- **Interactive Mapbox Map** with gesture support
-- **Real-time Location Tracking** with GPS
-- **Live Compass** with device sensors
-- **Multiple Map Styles** (Street, Satellite, Dark, Light)
-- **Zoom Controls** with smooth animations
-- **Marker Placement** at current location
+The existing Android Gradle configuration supports `MAPBOX_DOWNLOADS_TOKEN` as
+a local Gradle property if a native SDK download requires authentication. Keep
+any such build-only secret outside version control; it is not the public runtime
+token. Android/iOS development toolchains are required for device builds. The existing
+Mapbox 2.23.0 dependency requires iOS 14.0; all iOS deployment targets are aligned.
 
-### ✅ Beautiful UI/UX
-- **Location Overlay** (Top Left): Shows coordinates, address, timestamp
-- **Compass Widget** (Top Right): Real-time heading with cardinal directions
-- **Map Style Selector** (Bottom Left): Quick style switching
-- **Zoom Controls** (Bottom Right): Zoom in/out and marker tools
-- **Center Location Button** (Bottom Center): Quick navigation to current position
+## Architecture
 
-### ✅ Advanced Features
-- **Permission Handling** with user-friendly prompts
-- **Smooth Animations** and transitions
-- **Haptic Feedback** for better UX
-- **Error Handling** and fallbacks
-- **Responsive Design** for different screen sizes
+- The camera remains the initial GetX route. **Map Data** opens
+  `/map_navigation` using `MapNavigationBinding` and `MapNavigationController`.
+- `LocationService` is the shared Geolocator permission/GPS implementation;
+  `MapboxLocationService` keeps the existing camera-facing API. Navigation uses
+  fresh GPS, never a fabricated coordinate or a cached fallback. Reverse
+  geocoding is optional and is skipped for route origins.
+- `MapboxDirectionsService` uses the existing `http` dependency. It calls
+  [Mapbox Geocoding v6](https://docs.mapbox.com/api/search/geocoding/) on submit
+  (no keystroke/autocomplete requests), then
+  [Mapbox Directions v5](https://docs.mapbox.com/api/navigation/directions/)
+  with the driving profile and full GeoJSON geometry.
+- `MapboxService` owns native map state per screen, preventing navigation and the
+  camera thumbnail from overwriting each other's controllers. Route lines are
+  drawn below blue origin and orange destination markers. Camera fitting includes
+  every route vertex and both original endpoints, with padding and a maximum zoom.
+- Requests are bounded and errors are sanitized; destination edits/disposal
+  invalidate stale responses. Native map updates are serialized. GPS, address and
+  route results are kept in memory and are not logged or persisted by navigation.
 
-## 🎯 Navigation
+## Use
 
-Access the map from the home screen:
-1. Launch the app
-2. Tap the **"Map"** button (middle option)
-3. Grant location permissions when prompted
-4. Enjoy the interactive map experience!
+1. Open **Map Data**, allow location access, and enable device GPS.
+2. Enter an address or a place with its city, then choose **Find driving route**.
+3. Select the intended result when multiple places match.
+4. Inspect the route, total distance, estimated driving time and GPS-fix timestamp.
+5. Use **Show entire route** after panning, or **Refresh GPS / route** for a new fix.
 
-## 🔧 Troubleshooting
+This feature is a route preview, not turn-by-turn guidance. Driving time is an
+estimate, not a live-traffic guarantee. Native Mapbox maps are supported on
+Android and iOS; other platforms show an explanation. An internet connection is
+required for geocoding, routing, and uncached map resources. No new Dart packages
+are required.
 
-### Build Issues
-If you encounter build errors related to Mapbox:
+## Automated verification
 
-1. **Clean the project:**
-   ```bash
-   flutter clean
-   flutter pub get
-   ```
+Tested SDK target: Flutter 3.41.1 / Dart 3.11.0 (matches `pubspec.yaml`).
 
-2. **Check your API key** - Make sure it's a valid public token starting with `pk.`
-
-3. **Android Gradle Issues:**
-   - Update Android Studio
-   - Run `flutter doctor --android-licenses`
-
-4. **iOS Build Issues:**
-   - Update Xcode
-   - Clean build folder in Xcode
-
-### Runtime Issues
-
-**"Map not loading":**
-- Check internet connection
-- Verify API key is valid
-- Check location permissions
-
-**"Compass not working":**
-- Ensure device has magnetometer
-- Check sensor permissions
-- Calibrate device compass
-
-**"Location not updating":**
-- Enable location services
-- Grant precise location permission
-- Check GPS signal strength
-
-## 🎨 Customization
-
-### Change Default Map Style
-Edit `lib/config/mapbox_config.dart`:
-```dart
-static const String defaultStyle = 'mapbox://styles/mapbox/dark-v11';
+```sh
+flutter pub get
+flutter analyze --fatal-infos
+flutter test
+# Check formatting for all repository Dart sources.
+dart format --output=none --set-exit-if-changed lib test test_geocoding.dart
 ```
 
-### Customize UI Colors
-Edit the color schemes in `lib/screens/map_screen/map_screen.dart`
+Tests isolate HTTP, Geolocator, native camera and native-map boundaries. They do
+not need a Mapbox token and do not send real destination or location data.
+`test_geocoding.dart` is a manual device diagnostic, not an automated unit test.
 
-### Add New Map Styles
-```dart
-static const String customStyle = 'mapbox://styles/your_username/your_style_id';
-```
+## Device smoke checklist (requires a configured token)
 
-## 📱 Permissions Required
+- Android and iOS: permit location access; search a known nearby address; verify
+  both markers, road-following polyline, distance/time and full-route framing.
+- Deny permission, retry; permanently deny permission, open app settings, allow
+  location and return; turn GPS off/on and verify recovery from location settings.
+- Disable networking during search/routing and tile loading; verify messages and
+  retries. Test an unknown address and destinations with no connected driving road.
+- Select between ambiguous place names; edit input while requests are running;
+  clear a successful destination and verify the old route/metrics disappear.
+- Pan and restore the full route; test a route with a detour, nearby/coincident
+  endpoints and an antimeridian route where supported by the road network.
+- Test smaller displays, large text and the software keyboard; controls must
+  remain reachable and must not cover Mapbox attribution or the fitted route.
+- Repeatedly enter/leave the map and return to the camera; verify preview/capture,
+  GPS updates and map state remain independent, with no background timer growth.
 
-- **Location**: GPS coordinates and address lookup
-- **Sensors**: Compass functionality
-- **Internet**: Map tiles and API calls
-- **Storage**: Cache map data
-
-## 🚀 Performance Tips
-
-1. **Use appropriate zoom levels** for your use case
-2. **Limit marker count** for better performance
-3. **Cache location data** when possible
-4. **Optimize update intervals** for location and compass
-
-## 📞 Support
-
-If you encounter issues:
-1. Check this guide first
-2. Verify API key configuration
-3. Review console logs for specific errors
-4. Test with a different device if possible
-
-Enjoy your beautiful Mapbox-powered map application! 🗺️✨
+Do not treat mocked tests as proof of live native-map rendering. Run this checklist
+on target devices before a production release.
