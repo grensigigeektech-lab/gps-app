@@ -1,7 +1,9 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+
 import '../config/mapbox_config.dart';
 
 class LocationInfo {
@@ -18,11 +20,6 @@ class LocationInfo {
   });
 
   String get coordinates => '$latitude, $longitude';
-
-  @override
-  String toString() {
-    return 'LocationInfo(lat: $latitude, lng: $longitude, address: $address)';
-  }
 }
 
 enum LocationError {
@@ -40,185 +37,175 @@ class LocationResult {
 
   bool get success => info != null;
 
-  LocationResult.success(this.info)
-      : error = null,
-        errorMessage = null;
+  LocationResult.success(LocationInfo this.info)
+    : error = null,
+      errorMessage = null;
 
-  LocationResult.failure(this.error, this.errorMessage) : info = null;
+  LocationResult.failure(LocationError this.error, String this.errorMessage)
+    : info = null;
 }
 
+/// Shared GPS/permission implementation for both camera and navigation.
 class LocationService {
   static LocationInfo? _currentLocation;
-  static bool _isGettingLocation = false;
+  static int _pendingRequests = 0;
+  static Future<LocationPermission>? _permissionRequest;
 
   static LocationInfo? get currentLocation => _currentLocation;
-  static bool get isGettingLocation => _isGettingLocation;
+  static bool get isGettingLocation => _pendingRequests > 0;
 
-  /// Check if location permission is granted
   static Future<bool> hasLocationPermission() async {
     final permission = await Geolocator.checkPermission();
     return permission == LocationPermission.always ||
         permission == LocationPermission.whileInUse;
   }
 
-  /// Request location permission — returns true if granted
+  static Future<LocationPermission> _ensurePermission() {
+    return _permissionRequest ??= _checkAndRequestPermission().whenComplete(() {
+      _permissionRequest = null;
+    });
+  }
+
+  static Future<LocationPermission> _checkAndRequestPermission() async {
+    final permission = await Geolocator.checkPermission();
+    return permission == LocationPermission.denied
+        ? Geolocator.requestPermission()
+        : permission;
+  }
+
   static Future<bool> requestLocationPermission() async {
-    var permission = await Geolocator.checkPermission();
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-
+    final permission = await _ensurePermission();
     return permission == LocationPermission.always ||
         permission == LocationPermission.whileInUse;
   }
 
-  static Future<bool> isLocationServiceEnabled() async {
-    return await Geolocator.isLocationServiceEnabled();
-  }
+  static Future<bool> isLocationServiceEnabled() =>
+      Geolocator.isLocationServiceEnabled();
 
-  static Future<LocationResult> getCurrentLocationResult(
-      {bool forceRefresh = false}) async {
-    if (_isGettingLocation && !forceRefresh) {
-      if (_currentLocation != null) {
-        return LocationResult.success(_currentLocation);
-      }
-    }
-
-    _isGettingLocation = true;
-
+  static Future<LocationResult> getCurrentLocationResult({
+    bool forceRefresh = false,
+    bool includeAddress = true,
+  }) async {
+    _pendingRequests++;
     try {
-      // 1. Check service
-      final serviceEnabled = await isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        return LocationResult.failure(
-          LocationError.serviceDisabled,
-          'GPS is turned off. Please enable Location Services in Settings.',
-        );
+      // Never return a cached fix before rechecking service and permission.
+      if (!await isLocationServiceEnabled()) {
+        return _failure(LocationError.serviceDisabled);
       }
-
-      // 2. Check / request permission
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied) {
-        return LocationResult.failure(
-          LocationError.permissionDenied,
-          'Location access was denied. Tap "Enable" to grant permission.',
-        );
-      }
+      final permission = await _ensurePermission();
       if (permission == LocationPermission.deniedForever) {
-        return LocationResult.failure(
-          LocationError.permissionPermanentlyDenied,
-          'Location is permanently denied. Open Settings to allow access.',
-        );
+        return _failure(LocationError.permissionPermanentlyDenied);
+      }
+      if (permission != LocationPermission.always &&
+          permission != LocationPermission.whileInUse) {
+        return _failure(LocationError.permissionDenied);
       }
 
-      // 3. Get position
-      Position? position;
-      try {
-        debugPrint('Attempting to get last known position...');
-        position = await Geolocator.getLastKnownPosition();
-        if (position != null) {
-          debugPrint('Found last known position: ${position.latitude}, ${position.longitude}');
-        }
-      } catch (e) {
-        debugPrint('Error getting last known position: $e');
+      final cached = _currentLocation;
+      if (!forceRefresh &&
+          cached != null &&
+          DateTime.now().difference(cached.timestamp) <
+              const Duration(seconds: 30)) {
+        return LocationResult.success(cached);
       }
 
-      // Fetch a fresh position
-      try {
-        debugPrint('Fetching fresh position with high accuracy...');
-        final fresh = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.best,
-          timeLimit: const Duration(seconds: 20),
-        );
-        position = fresh;
-        debugPrint('Fresh position obtained: ${position.latitude}, ${position.longitude}');
-      } catch (e) {
-        debugPrint('Fresh position failed: $e');
-        if (position == null) {
-          return LocationResult.failure(
-            LocationError.timeout,
-            'Could not determine location (Timeout). Check your GPS/network signal.',
-          );
-        } else {
-          debugPrint('Proceeding with last known position.');
-        }
+      // A navigation origin must be real and fresh. No fixed-coordinate or
+      // last-known fallback when the current GPS fix fails.
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 20),
+      );
+      if (!position.latitude.isFinite ||
+          !position.longitude.isFinite ||
+          position.latitude.abs() > 90 ||
+          position.longitude.abs() > 180) {
+        return _failure(LocationError.unknown);
       }
-
-      // 4. Geocode via Mapbox
-      String? address;
-      try {
-        address = await _getMapboxAddress(position!.latitude, position.longitude)
-            .timeout(const Duration(seconds: 8), onTimeout: () => null);
-      } catch (e) {
-        debugPrint('Geocoding failed: $e');
+      if (DateTime.now().difference(position.timestamp) >
+          const Duration(minutes: 2)) {
+        return _failure(LocationError.timeout);
       }
-
-      _currentLocation = LocationInfo(
-        latitude: position!.latitude,
+      final address = includeAddress
+          ? await _getMapboxAddress(position.latitude, position.longitude)
+          : null;
+      final location = LocationInfo(
+        latitude: position.latitude,
         longitude: position.longitude,
         address: address,
-        timestamp: DateTime.now(),
+        timestamp: position.timestamp,
       );
-
-      return LocationResult.success(_currentLocation);
-    } catch (e) {
-      debugPrint('LocationService error: $e');
-      return LocationResult.failure(LocationError.unknown, 'Unexpected error: $e');
+      _currentLocation = location;
+      return LocationResult.success(location);
+    } on TimeoutException {
+      return _failure(LocationError.timeout);
+    } on LocationServiceDisabledException {
+      return _failure(LocationError.serviceDisabled);
+    } on PermissionDeniedException {
+      return _failure(LocationError.permissionDenied);
+    } catch (_) {
+      return _failure(LocationError.unknown);
     } finally {
-      _isGettingLocation = false;
+      _pendingRequests--;
     }
   }
 
-  /// Legacy helper used by older callers — wraps the result version
+  static LocationResult _failure(LocationError error) {
+    _currentLocation = null;
+    final message = switch (error) {
+      LocationError.serviceDisabled =>
+        'GPS is turned off. Enable Location Services in Settings, then retry.',
+      LocationError.permissionDenied =>
+        'Location access was denied. Tap Retry to allow location access.',
+      LocationError.permissionPermanentlyDenied =>
+        'Location access is blocked. Allow it in App Settings, then retry.',
+      LocationError.timeout =>
+        'Could not get a GPS fix. Move to an open area and retry.',
+      LocationError.unknown =>
+        'Could not determine your location. Please retry.',
+    };
+    return LocationResult.failure(error, message);
+  }
+
   static Future<LocationInfo?> getCurrentLocation({
     bool forceRefresh = false,
   }) async {
     final result = await getCurrentLocationResult(forceRefresh: forceRefresh);
     if (result.success) return result.info;
-    throw Exception(result.errorMessage ?? 'Failed to get location');
+    throw Exception(result.errorMessage);
   }
 
   static Future<String?> _getMapboxAddress(
-      double latitude, double longitude) async {
+    double latitude,
+    double longitude,
+  ) async {
+    if (!MapboxConfig.isConfigured) return null;
+    final client = http.Client();
     try {
-      // Expanded types to include neighborhood, locality, and region for better coverage
-      final url =
-          'https://api.mapbox.com/geocoding/v5/mapbox.places/$longitude,$latitude.json'
-          '?access_token=${MapboxConfig.accessToken}&limit=1&types=address,place,neighborhood,locality,region';
-
-      debugPrint('Fetching address from Mapbox: $url');
-      final response = await http.get(Uri.parse(url));
-      
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final features = data['features'] as List;
-        
-        if (features.isNotEmpty) {
-          final placeName = features.first['place_name'] as String?;
-          if (placeName != null && placeName.trim().isNotEmpty) {
-            debugPrint('Mapbox geocoding success: $placeName');
-            return placeName.trim();
-          } else {
-            debugPrint('Mapbox geocoding: Found feature but place_name was empty.');
-          }
-        } else {
-          debugPrint('Mapbox geocoding: No features found in response.');
-        }
-      } else {
-        debugPrint('Mapbox geocoding failed. Status: ${response.statusCode}');
-        debugPrint('Response: ${response.body}');
-      }
-    } catch (e) {
-      debugPrint('Mapbox geocoding exception: $e');
+      final uri = Uri.https(
+        'api.mapbox.com',
+        '/geocoding/v5/mapbox.places/$longitude,$latitude.json',
+        {
+          'access_token': MapboxConfig.accessToken,
+          'limit': '1',
+          'types': 'address,place,neighborhood,locality,region',
+        },
+      );
+      final response = await client
+          .get(uri)
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) return null;
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final features = data['features'] as List<dynamic>;
+      if (features.isEmpty) return null;
+      final name = features.first['place_name'] as String?;
+      return name == null || name.trim().isEmpty ? null : name.trim();
+    } catch (_) {
+      // Address lookup is optional; failure must not discard a valid GPS fix.
+      return null;
+    } finally {
+      client.close();
     }
-    return null;
   }
 
-  static void clearCurrentLocation() {
-    _currentLocation = null;
-  }
+  static void clearCurrentLocation() => _currentLocation = null;
 }
