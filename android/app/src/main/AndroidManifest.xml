@@ -16,10 +16,6 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         
-        <!-- Mapbox API Key -->
-        <meta-data
-            android:name="com.mapbox.token"
-            android:value="YOUR_MAPBOX_ACCESS_TOKEN" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
